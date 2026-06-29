@@ -4,5 +4,8 @@
   },
   "db": {
     "uri": "VACATIONS_MONGO_URI"
+  },
+  "mcp": {
+    "url": "MCP_URL"
   }
 }

@@ -1,7 +1,10 @@
 import { Router } from 'express'
+import bodyValidation from '../middlewares/body-validation'
+import { askValidator } from '../controllers/mcp/validators'
+import ask from '../controllers/mcp/ask'
 
 const mcpRouter = Router()
 
-// POST /api/mcp/ask   - ask a question about vacations via MCP
+mcpRouter.post('/ask', bodyValidation(askValidator), ask)
 
 export default mcpRouter

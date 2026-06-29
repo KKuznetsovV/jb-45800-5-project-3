@@ -473,6 +473,116 @@
           }
         }
       ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "AI Recommend",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"Rome\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/recommend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ai", "recommend"]
+            },
+            "description": "Returns AI travel recommendations for a destination. Change 'Rome' to any destination."
+          }
+        },
+        {
+          "name": "AI Recommend - Missing destination (should 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/recommend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ai", "recommend"]
+            },
+            "description": "Should return 422 - destination is required"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MCP",
+      "item": [
+        {
+          "name": "MCP Ask",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Which vacations are available in Hawaii?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mcp/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mcp", "ask"]
+            },
+            "description": "Asks a question about vacations. MCP server fetches data from MongoDB, OpenAI answers using that context."
+          }
+        },
+        {
+          "name": "MCP Ask - Cheapest vacation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is the cheapest vacation available?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mcp/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mcp", "ask"]
+            },
+            "description": "MCP fetches all vacations via list_vacations tool, OpenAI answers based on the data."
+          }
+        },
+        {
+          "name": "MCP Ask - Short question (should 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"hi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mcp/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mcp", "ask"]
+            },
+            "description": "Should return 422 - question must be at least 5 characters"
+          }
+        }
+      ]
     }
   ]
 }
