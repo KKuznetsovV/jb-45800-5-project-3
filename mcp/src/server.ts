@@ -11,7 +11,10 @@ import Vacation from './models/Vacation'
 const app = express()
 app.use(express.json())
 
-const server = new Server({ name: 'vacations-mcp', version: '1.0.0' })
+const server = new Server(
+    { name: 'vacations-mcp', version: '1.0.0' },
+    { capabilities: { tools: {} } }
+)
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
