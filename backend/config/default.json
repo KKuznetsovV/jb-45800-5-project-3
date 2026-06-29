@@ -1,0 +1,14 @@
+{
+  "app": {
+    "name": "vacations-api",
+    "port": 3001,
+    "encryptionKey": "dev-secret-key-change-in-production",
+    "tokenExpiry": "7d",
+    "sync": {
+      "force": false
+    }
+  },
+  "db": {
+    "uri": "mongodb://localhost:27017/vacations"
+  }
+}

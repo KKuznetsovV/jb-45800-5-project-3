@@ -1,0 +1,59 @@
+services:
+
+  # MongoDB
+  database:
+    container_name: vacations-db
+    image: mongo:7.0
+    environment:
+      - MONGO_INITDB_DATABASE=vacations
+    expose:
+      - 27017
+    volumes:
+      - mongo-data:/data/db
+      - ./database/seed.js:/docker-entrypoint-initdb.d/seed.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # Backend REST API
+  backend:
+    container_name: vacations-backend
+    ports:
+      - 3001:3001
+    environment:
+      - NODE_ENV=production
+      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+      - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY}
+      - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.compose
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # MCP server
+  mcp:
+    container_name: vacations-mcp
+    ports:
+      - 3002:3002
+    environment:
+      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+    build: ./mcp
+    depends_on:
+      - backend
+
+  # Frontend (React, served by nginx)
+  frontend:
+    container_name: vacations-frontend
+    ports:
+      - 80:80
+    build: ./frontend
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

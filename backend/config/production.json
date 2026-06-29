@@ -1,0 +1,10 @@
+{
+  "app": {
+    "port": 3001,
+    "encryptionKey": "${VACATIONS_ENCRYPTION_KEY}",
+    "tokenExpiry": "7d"
+  },
+  "db": {
+    "uri": "${VACATIONS_MONGO_URI}"
+  }
+}
