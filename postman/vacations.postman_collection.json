@@ -358,6 +358,121 @@
           }
         }
       ]
+    },
+    {
+      "name": "Likes",
+      "item": [
+        {
+          "name": "Like a Vacation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "likes", "{{vacationId}}"]
+            },
+            "description": "Like a vacation. Returns { likesCount }. Run 'Get All' first to populate {{vacationId}}."
+          }
+        },
+        {
+          "name": "Like Again (should 409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "likes", "{{vacationId}}"]
+            },
+            "description": "Should return 409 - You have already liked this vacation"
+          }
+        },
+        {
+          "name": "Unlike a Vacation",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "likes", "{{vacationId}}"]
+            },
+            "description": "Unlike a vacation. Returns { likesCount }."
+          }
+        },
+        {
+          "name": "Unlike Again (should 404)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "likes", "{{vacationId}}"]
+            },
+            "description": "Should return 404 - You have not liked this vacation"
+          }
+        },
+        {
+          "name": "Get All - Filter liked (verify)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?filter=liked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"],
+              "query": [{ "key": "filter", "value": "liked" }]
+            },
+            "description": "After liking, this should return that vacation with isLiked: true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Report (admin only)",
+      "item": [
+        {
+          "name": "Get Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "report"]
+            },
+            "description": "Admin only. Returns all vacations with their like counts, sorted by destination."
+          }
+        },
+        {
+          "name": "Download CSV",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/report/csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "report", "csv"]
+            },
+            "description": "Admin only. Downloads 'Vacation Likes.csv' with Destination,Likes columns."
+          }
+        },
+        {
+          "name": "Get Report as User (should 403)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "report"]
+            },
+            "description": "Login as regular user first, then send — should return 403 Access denied"
+          }
+        }
+      ]
     }
   ]
 }

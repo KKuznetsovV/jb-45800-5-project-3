@@ -1,8 +1,13 @@
 import { Router } from 'express'
+import roleEnforce from '../middlewares/role-enforce'
+import getReport from '../controllers/report/get-report'
+import getCsv    from '../controllers/report/get-csv'
 
 const reportRouter = Router()
 
-// GET /api/report          - admin: vacations with like counts
-// GET /api/report/csv      - admin: download CSV
+reportRouter.use(roleEnforce('admin'))
+
+reportRouter.get('/csv', getCsv)
+reportRouter.get('/',    getReport)
 
 export default reportRouter
