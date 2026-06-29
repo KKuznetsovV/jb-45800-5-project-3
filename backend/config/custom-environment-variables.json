@@ -1,0 +1,8 @@
+{
+  "app": {
+    "encryptionKey": "VACATIONS_ENCRYPTION_KEY"
+  },
+  "db": {
+    "uri": "VACATIONS_MONGO_URI"
+  }
+}

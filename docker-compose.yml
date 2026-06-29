@@ -34,16 +34,16 @@ services:
       database:
         condition: service_healthy
 
-  # MCP server
-  mcp:
-    container_name: vacations-mcp
-    ports:
-      - 3002:3002
-    environment:
-      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
-    build: ./mcp
-    depends_on:
-      - backend
+  # MCP server — uncomment when mcp/ folder is ready (step-06)
+  # mcp:
+  #   container_name: vacations-mcp
+  #   ports:
+  #     - 3002:3002
+  #   environment:
+  #     - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+  #   build: ./mcp
+  #   depends_on:
+  #     - backend
 
   # Frontend (React, served by nginx)
   frontend:
