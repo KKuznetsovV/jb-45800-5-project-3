@@ -15,6 +15,11 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "vacationId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -178,6 +183,178 @@
               "path": ["api", "auth", "login"]
             },
             "description": "Should return 401 - Incorrect email or password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vacations",
+      "item": [
+        {
+          "name": "Get All (page 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.vacations && res.vacations.length > 0) {",
+                  "    pm.collectionVariables.set('vacationId', res.vacations[0]._id);",
+                  "    console.log('vacationId saved:', res.vacations[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"],
+              "query": [{ "key": "page", "value": "1" }]
+            },
+            "description": "Returns 9 vacations per page with likesCount and isLiked per user.\nAlso saves first vacationId to {{vacationId}}."
+          }
+        },
+        {
+          "name": "Get All - Filter: liked",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?filter=liked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"],
+              "query": [{ "key": "filter", "value": "liked" }]
+            }
+          }
+        },
+        {
+          "name": "Get All - Filter: active",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?filter=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"],
+              "query": [{ "key": "filter", "value": "active" }]
+            }
+          }
+        },
+        {
+          "name": "Get All - Filter: upcoming",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?filter=upcoming",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"],
+              "query": [{ "key": "filter", "value": "upcoming" }]
+            }
+          }
+        },
+        {
+          "name": "Get One",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations", "{{vacationId}}"]
+            },
+            "description": "Requires {{vacationId}} — run 'Get All' first to auto-populate it."
+          }
+        },
+        {
+          "name": "Add Vacation (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res._id) {",
+                  "    pm.collectionVariables.set('vacationId', res._id);",
+                  "    console.log('New vacationId saved:', res._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "destination", "value": "Test Destination",   "type": "text" },
+                { "key": "description", "value": "A lovely test vacation.", "type": "text" },
+                { "key": "startDate",   "value": "2027-01-01",          "type": "text" },
+                { "key": "endDate",     "value": "2027-01-15",          "type": "text" },
+                { "key": "price",       "value": "999",                 "type": "text" },
+                { "key": "image",       "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"]
+            },
+            "description": "Admin only (login as admin first).\nSend as form-data. Attach any image file to the 'image' field.\nSaved vacationId auto-set to {{vacationId}}."
+          }
+        },
+        {
+          "name": "Update Vacation (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "destination", "value": "Updated Destination", "type": "text" },
+                { "key": "description", "value": "Updated description.",  "type": "text" },
+                { "key": "startDate",   "value": "2027-02-01",           "type": "text" },
+                { "key": "endDate",     "value": "2027-02-15",           "type": "text" },
+                { "key": "price",       "value": "1200",                 "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations", "{{vacationId}}"]
+            },
+            "description": "Admin only. Image field is optional — omit to keep existing image."
+          }
+        },
+        {
+          "name": "Delete Vacation (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations", "{{vacationId}}"]
+            },
+            "description": "Admin only. Also deletes the vacation image and all its likes. Returns 204."
+          }
+        },
+        {
+          "name": "Get All - No token (should 401)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vacations"]
+            }
           }
         }
       ]
