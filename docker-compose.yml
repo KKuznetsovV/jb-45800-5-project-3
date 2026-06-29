@@ -10,7 +10,6 @@ services:
       - 27017
     volumes:
       - mongo-data:/data/db
-      - ./database/seed.js:/docker-entrypoint-initdb.d/seed.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 15s
