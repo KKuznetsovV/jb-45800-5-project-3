@@ -30,7 +30,7 @@ function Report() {
     <div className="report-page">
       <div className="report-header">
         <h2>📊 Vacations Likes Report</h2>
-        <button className="btn-csv" onClick={() => reportService.downloadCsv()}>
+        <button className="btn-csv" onClick={() => reportService.downloadCsv().catch(console.error)}>
           ⬇ Download CSV
         </button>
       </div>

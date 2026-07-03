@@ -10,9 +10,14 @@ async function getReport(): Promise<ReportItem[]> {
   return response.data
 }
 
-function downloadCsv(): void {
-  // Open as a direct browser download — the backend sets Content-Disposition: attachment
-  window.open('/api/report/csv', '_blank')
+async function downloadCsv(): Promise<void> {
+  const response = await api.get('/report/csv', { responseType: 'blob' })
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'Vacation Likes.csv'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const reportService = { getReport, downloadCsv }
