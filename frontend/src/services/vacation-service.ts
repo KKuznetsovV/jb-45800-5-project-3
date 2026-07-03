@@ -25,6 +25,29 @@ async function unlike(vacationId: string): Promise<{ likesCount: number }> {
   return response.data
 }
 
-const vacationService = { getAll, like, unlike }
+async function getOne(id: string): Promise<VacationModel> {
+  const response = await api.get(`/vacations/${id}`)
+  return response.data
+}
+
+async function add(formData: FormData): Promise<VacationModel> {
+  const response = await api.post('/vacations', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data
+}
+
+async function update(id: string, formData: FormData): Promise<VacationModel> {
+  const response = await api.put(`/vacations/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data
+}
+
+async function remove(id: string): Promise<void> {
+  await api.delete(`/vacations/${id}`)
+}
+
+const vacationService = { getAll, like, unlike, getOne, add, update, remove }
 export default vacationService
 

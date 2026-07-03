@@ -19,6 +19,9 @@ function NavBar() {
       <div className="navbar-left">
         <Link to="/vacations" className="navbar-brand">✈ Vacations</Link>
         <Link to="/about" className="navbar-link">About</Link>
+        {user?.role === 'admin' && (
+          <Link to="/admin/add" className="navbar-link navbar-link-admin">+ Add Vacation</Link>
+        )}
       </div>
       {user && (
         <div className="navbar-user">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import VacationModel from '../../models/VacationModel'
 import vacationService from '../../services/vacation-service'
 import VacationCard from './VacationCard'
@@ -7,6 +8,7 @@ import './VacationList.css'
 type Filter = '' | 'liked' | 'active' | 'upcoming'
 
 function VacationList() {
+  const navigate = useNavigate()
   const [vacations, setVacations] = useState<VacationModel[]>([])
   const [page, setPage]   = useState(1)
   const [pages, setPages] = useState(1)
@@ -61,6 +63,20 @@ function VacationList() {
     { label: 'Upcoming', value: 'upcoming' },
   ]
 
+  function handleEdit(vacation: VacationModel) {
+    navigate(`/admin/edit/${vacation._id}`)
+  }
+
+  async function handleDelete(vacationId: string) {
+    if (!window.confirm('Delete this vacation?')) return
+    try {
+      await vacationService.remove(vacationId)
+      setVacations(prev => prev.filter(v => v._id !== vacationId))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <div className="vacation-list-page">
       <div className="vacation-filters">
@@ -86,6 +102,8 @@ function VacationList() {
             key={v._id}
             vacation={v}
             onLikeToggle={handleLikeToggle}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         ))}
       </div>
@@ -102,4 +120,3 @@ function VacationList() {
 }
 
 export default VacationList
-
