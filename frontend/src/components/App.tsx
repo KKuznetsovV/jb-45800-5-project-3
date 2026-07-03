@@ -5,6 +5,7 @@ import Layout from './layout/Layout'
 import Register from './auth/Register'
 import Login from './auth/Login'
 import VacationList from './vacations/VacationList'
+import About from './about/About'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       {/* protected routes — navbar + content */}
       <Route element={<AuthGuard><Layout /></AuthGuard>}>
         <Route path="/vacations" element={<VacationList />} />
+        <Route path="/about"     element={<About />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/vacations" replace />} />

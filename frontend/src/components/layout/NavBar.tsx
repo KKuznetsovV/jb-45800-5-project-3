@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { logout } from '../../redux/auth-slice'
 import { RootState } from '../../redux/store'
 import './NavBar.css'
@@ -16,7 +16,10 @@ function NavBar() {
 
   return (
     <nav className="navbar">
-      <span className="navbar-brand">✈ Vacations</span>
+      <div className="navbar-left">
+        <Link to="/vacations" className="navbar-brand">✈ Vacations</Link>
+        <Link to="/about" className="navbar-link">About</Link>
+      </div>
       {user && (
         <div className="navbar-user">
           <span>Hello, {user.firstName} {user.lastName}</span>
