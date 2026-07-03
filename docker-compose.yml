@@ -1,9 +1,9 @@
 services:
 
-  # MongoDB
+  # MongoDB — built from ./database (init.js seeds data on first start)
   database:
     container_name: vacations-db
-    image: mongo:7.0
+    build: ./database
     environment:
       - MONGO_INITDB_DATABASE=vacations
     expose:
