@@ -1,588 +1,924 @@
 {
   "info": {
-    "name": "Vacations API",
-    "_postman_id": "vacations-api-collection",
-    "description": "Vacations Likes System - REST API\n\nAdmin credentials: admin@vacations.com / Admin1234\nTest user credentials: user@vacations.com / User1234\n\nAfter login/register the token is auto-saved to the {{token}} variable.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "_postman_id": "665d97a1-e6da-41ba-9355-75a13037c240",
+    "name": "Vacations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53444870",
+    "_collection_link": "https://go.postman.co/collection/53444870-665d97a1-e6da-41ba-9355-75a13037c240?source=collection_link"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3001",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "vacationId",
-      "value": "",
-      "type": "string"
-    }
-  ],
   "item": [
     {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Register",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set('token', res.token);",
-                  "    console.log('Token saved:', res.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n     \"firstName\": \"Vova\",\r\n     \"lastName\": \"NotFromHere\",\r\n     \"email\": \"vova@notfromhere.com\",\r\n     \"password\": \"user1234\"\r\n       \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
             }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
           ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"pass\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "register"]
-            },
-            "description": "Register a new user. Returns { user, token }.\n\nValidations:\n- All fields required\n- Valid email format\n- Password min 4 characters\n- Email must not already be registered (409 if duplicate)"
-          }
-        },
-        {
-          "name": "Register - Duplicate Email (should 409)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"pass\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "register"]
-            },
-            "description": "Should return 409 - Email is already registered"
-          }
-        },
-        {
-          "name": "Register - Validation Error (should 422)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"\",\n  \"lastName\": \"Doe\",\n  \"email\": \"not-an-email\",\n  \"password\": \"ab\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "register"]
-            },
-            "description": "Should return 422 - validation error"
-          }
-        },
-        {
-          "name": "Login - Admin",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set('token', res.token);",
-                  "    console.log('Token saved:', res.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@vacations.com\",\n  \"password\": \"Admin1234\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
-            },
-            "description": "Login as admin. Token auto-saved to {{token}}."
-          }
-        },
-        {
-          "name": "Login - Test User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set('token', res.token);",
-                  "    console.log('Token saved:', res.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@vacations.com\",\n  \"password\": \"User1234\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
-            },
-            "description": "Login as regular user. Token auto-saved to {{token}}."
-          }
-        },
-        {
-          "name": "Login - Wrong Password (should 401)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@vacations.com\",\n  \"password\": \"wrongpassword\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
-            },
-            "description": "Should return 401 - Incorrect email or password"
-          }
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
         }
-      ]
+      },
+      "response": []
     },
     {
-      "name": "Vacations",
-      "item": [
-        {
-          "name": "Get All (page 1)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.vacations && res.vacations.length > 0) {",
-                  "    pm.collectionVariables.set('vacationId', res.vacations[0]._id);",
-                  "    console.log('vacationId saved:', res.vacations[0]._id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
+      "name": "Email already registered",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nikita\",\r\n    \"lastName\": \"Kojemyaka\",\r\n    \"email\": \"admin@vacations.com\",\r\n    \"password\": \"user1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
             }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
           ],
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations?page=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"],
-              "query": [{ "key": "page", "value": "1" }]
-            },
-            "description": "Returns 9 vacations per page with likesCount and isLiked per user.\nAlso saves first vacationId to {{vacationId}}."
-          }
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Validation error",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"\",\r\n    \"lastName\": \"Kojemyaka\",\r\n    \"email\": \"admin@vacations.com\",\r\n    \"password\": \"user1234\"\r\n}"
         },
-        {
-          "name": "Get All - Filter: liked",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations?filter=liked",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"],
-              "query": [{ "key": "filter", "value": "liked" }]
-            }
-          }
-        },
-        {
-          "name": "Get All - Filter: active",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations?filter=active",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"],
-              "query": [{ "key": "filter", "value": "active" }]
-            }
-          }
-        },
-        {
-          "name": "Get All - Filter: upcoming",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations?filter=upcoming",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"],
-              "query": [{ "key": "filter", "value": "upcoming" }]
-            }
-          }
-        },
-        {
-          "name": "Get One",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations", "{{vacationId}}"]
-            },
-            "description": "Requires {{vacationId}} — run 'Get All' first to auto-populate it."
-          }
-        },
-        {
-          "name": "Add Vacation (admin)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res._id) {",
-                  "    pm.collectionVariables.set('vacationId', res._id);",
-                  "    console.log('New vacationId saved:', res._id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
           ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "destination", "value": "Test Destination",   "type": "text" },
-                { "key": "description", "value": "A lovely test vacation.", "type": "text" },
-                { "key": "startDate",   "value": "2027-01-01",          "type": "text" },
-                { "key": "endDate",     "value": "2027-01-15",          "type": "text" },
-                { "key": "price",       "value": "999",                 "type": "text" },
-                { "key": "image",       "type": "file", "src": [] }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"]
-            },
-            "description": "Admin only (login as admin first).\nSend as form-data. Attach any image file to the 'image' field.\nSaved vacationId auto-set to {{vacationId}}."
-          }
-        },
-        {
-          "name": "Update Vacation (admin)",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "destination", "value": "Updated Destination", "type": "text" },
-                { "key": "description", "value": "Updated description.",  "type": "text" },
-                { "key": "startDate",   "value": "2027-02-01",           "type": "text" },
-                { "key": "endDate",     "value": "2027-02-15",           "type": "text" },
-                { "key": "price",       "value": "1200",                 "type": "text" }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations", "{{vacationId}}"]
-            },
-            "description": "Admin only. Image field is optional — omit to keep existing image."
-          }
-        },
-        {
-          "name": "Delete Vacation (admin)",
-          "request": {
-            "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations", "{{vacationId}}"]
-            },
-            "description": "Admin only. Also deletes the vacation image and all its likes. Returns 204."
-          }
-        },
-        {
-          "name": "Get All - No token (should 401)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"]
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "email validation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nikita\",\r\n    \"lastName\": \"Kojemyaka\",\r\n    \"email\": \"nikita.com\",\r\n    \"password\": \"234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
             }
           }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
         }
-      ]
+      },
+      "response": []
     },
     {
-      "name": "Likes",
-      "item": [
-        {
-          "name": "Like a Vacation",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "likes", "{{vacationId}}"]
-            },
-            "description": "Like a vacation. Returns { likesCount }. Run 'Get All' first to populate {{vacationId}}."
+      "name": "Password validation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nikita\",\r\n    \"lastName\": \"Kojemyaka\",\r\n    \"email\": \"nikita@strong.com\",\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
           }
         },
-        {
-          "name": "Like Again (should 409)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "likes", "{{vacationId}}"]
-            },
-            "description": "Should return 409 - You have already liked this vacation"
-          }
-        },
-        {
-          "name": "Unlike a Vacation",
-          "request": {
-            "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "likes", "{{vacationId}}"]
-            },
-            "description": "Unlike a vacation. Returns { likesCount }."
-          }
-        },
-        {
-          "name": "Unlike Again (should 404)",
-          "request": {
-            "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/likes/{{vacationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "likes", "{{vacationId}}"]
-            },
-            "description": "Should return 404 - You have not liked this vacation"
-          }
-        },
-        {
-          "name": "Get All - Filter liked (verify)",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/vacations?filter=liked",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vacations"],
-              "query": [{ "key": "filter", "value": "liked" }]
-            },
-            "description": "After liking, this should return that vacation with isLiked: true"
-          }
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
         }
-      ]
+      },
+      "response": []
     },
     {
-      "name": "Report (admin only)",
-      "item": [
-        {
-          "name": "Get Report",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/report",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "report"]
-            },
-            "description": "Admin only. Returns all vacations with their like counts, sorted by destination."
+      "name": "misssing param",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nikita\",\r\n    \"lastName\": \"Kojemyaka\",\r\n    \"password\": \"12344\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
           }
         },
-        {
-          "name": "Download CSV",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/report/csv",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "report", "csv"]
-            },
-            "description": "Admin only. Downloads 'Vacation Likes.csv' with Destination,Likes columns."
-          }
-        },
-        {
-          "name": "Get Report as User (should 403)",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/report",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "report"]
-            },
-            "description": "Login as regular user first, then send — should return 403 Access denied"
-          }
+        "url": {
+          "raw": "http://localhost:3001/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
         }
-      ]
+      },
+      "response": []
     },
     {
-      "name": "AI",
-      "item": [
-        {
-          "name": "AI Recommend",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"destination\": \"Rome\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/recommend",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "recommend"]
-            },
-            "description": "Returns AI travel recommendations for a destination. Change 'Rome' to any destination."
+      "name": "Admin login",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"admin@vacations.com\",\r\n  \"password\": \"Admin1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
           }
         },
-        {
-          "name": "AI Recommend - Missing destination (should 422)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ai/recommend",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "recommend"]
-            },
-            "description": "Should return 422 - destination is required"
-          }
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
         }
-      ]
+      },
+      "response": []
     },
     {
-      "name": "MCP",
-      "item": [
-        {
-          "name": "MCP Ask",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"question\": \"Which vacations are available in Hawaii?\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/mcp/ask",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "mcp", "ask"]
-            },
-            "description": "Asks a question about vacations. MCP server fetches data from MongoDB, OpenAI answers using that context."
+      "name": "Invalid password login",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"admin@vacations.com\",\r\n  \"password\": \"Admin12345\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
           }
         },
-        {
-          "name": "MCP Ask - Cheapest vacation",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"question\": \"What is the cheapest vacation available?\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/mcp/ask",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "mcp", "ask"]
-            },
-            "description": "MCP fetches all vacations via list_vacations tool, OpenAI answers based on the data."
-          }
-        },
-        {
-          "name": "MCP Ask - Short question (should 422)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"question\": \"hi\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/mcp/ask",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "mcp", "ask"]
-            },
-            "description": "Should return 422 - question must be at least 5 characters"
-          }
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
         }
-      ]
+      },
+      "response": []
+    },
+    {
+      "name": "GET all vacations",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/vacations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "401 auth token missing",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/vacations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Vacation added",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "destination",
+              "value": "Tel Aviv",
+              "type": "text",
+              "uuid": "3dd7aaf4-fadf-42e7-8c82-a5f4f084f5e8"
+            },
+            {
+              "key": "description",
+              "value": "White city, UNESCO World Heritage site...",
+              "type": "text",
+              "uuid": "d49c2347-cd02-4a2c-8dbf-f643586df4b2"
+            },
+            {
+              "key": "startDate",
+              "value": "2026-11-20",
+              "type": "text",
+              "uuid": "a7081822-6691-4af0-9720-a210dd681090"
+            },
+            {
+              "key": "endDate",
+              "value": "2026-12-13",
+              "type": "text",
+              "uuid": "21c90a44-d8ff-42a2-b2bb-d504ea9026e8"
+            },
+            {
+              "key": "price",
+              "value": "5000",
+              "type": "text",
+              "uuid": "ca9433ef-8517-40f5-8e04-19d052801299"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "uuid": "468a8ec7-189a-4a3d-81e3-763db80388af",
+              "src": "Gai3Et9n-/TLV.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/vacations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update vacay",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "destination",
+              "value": "Tel Aviv",
+              "type": "text",
+              "uuid": "27eac7ac-2c5e-4f0f-a2fc-caf479331392"
+            },
+            {
+              "key": "description",
+              "value": "White city, UNESCO World Heritage site, it is a great city!!!",
+              "type": "text",
+              "uuid": "988b0bcc-5751-4e4b-9de6-25afaf25da3b"
+            },
+            {
+              "key": "startDate",
+              "value": "2026-11-20",
+              "type": "text",
+              "uuid": "fcea9552-0348-4e81-8160-4307101516c9"
+            },
+            {
+              "key": "endDate",
+              "value": "2026-12-13",
+              "type": "text",
+              "uuid": "676a9de9-76e9-4ee2-9f2c-b7ee1a78079e"
+            },
+            {
+              "key": "price",
+              "value": "5500",
+              "type": "text",
+              "uuid": "e27bfacd-e5f5-46b3-ac69-d8cb23fbd10b"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "uuid": "e88f289f-d7aa-4699-909d-199caa68a4f0",
+              "src": "JTwqEB4xU/TLV.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/vacations/6a423ec15b07850abd103764",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations",
+            "6a423ec15b07850abd103764"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete vacay",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "destination",
+              "value": "Tel Aviv",
+              "type": "text",
+              "uuid": "27eac7ac-2c5e-4f0f-a2fc-caf479331392"
+            },
+            {
+              "key": "description",
+              "value": "White city, UNESCO World Heritage site, it is a great city!!!",
+              "type": "text",
+              "uuid": "988b0bcc-5751-4e4b-9de6-25afaf25da3b"
+            },
+            {
+              "key": "startDate",
+              "value": "2026-11-20",
+              "type": "text",
+              "uuid": "fcea9552-0348-4e81-8160-4307101516c9"
+            },
+            {
+              "key": "endDate",
+              "value": "2026-12-13",
+              "type": "text",
+              "uuid": "676a9de9-76e9-4ee2-9f2c-b7ee1a78079e"
+            },
+            {
+              "key": "price",
+              "value": "5500",
+              "type": "text",
+              "uuid": "e27bfacd-e5f5-46b3-ac69-d8cb23fbd10b"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "uuid": "e88f289f-d7aa-4699-909d-199caa68a4f0",
+              "src": "JTwqEB4xU/TLV.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/vacations/6a42439ff0fd6cfb3ff57baf",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations",
+            "6a42439ff0fd6cfb3ff57baf"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "404 vacay",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/vacations/6a423ec15b07850abd103764",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations",
+            "6a423ec15b07850abd103764"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User access denied",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/vacations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "vacations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like added",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/likes/6a42316edb971aaebec15867",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "likes",
+            "6a42316edb971aaebec15867"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Unliked",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/likes/6a42316edb971aaebec15867",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "likes",
+            "6a42316edb971aaebec15867"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET like report",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/report",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "report"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "download csv report",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4MjcyNDQ4MCwiZXhwIjoxNzgzMzI5MjgwfQ.nPd-k4TXu352Plwv6pXNEpjNfy0fWO45C-mZAgpMJD0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/report/csv",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "report",
+            "csv"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Access denied",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/report",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "report"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ai recommendation",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"destination\": \"Rome\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/ai/recommend",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "ai",
+            "recommend"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ai question",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"question\": \"Which vacations are available in Hawaii?\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/mcp/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "mcp",
+            "ask"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cheapest Vacay",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"question\": \"What is the cheapest vacation available?\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/mcp/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "mcp",
+            "ask"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "question validation error",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNDIzMTZlZGI5NzFhYWViZWMxNTg3NyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzgyNzI2OTA5LCJleHAiOjE3ODMzMzE3MDl9.3tc3wBwvOkKe410yvq0AhaiNG_4a3K8k9-WyHILiK4c",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"question\": \"hi\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/mcp/ask",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "mcp",
+            "ask"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }
