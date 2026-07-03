@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import { Types } from 'mongoose'
 import Vacation from '../../models/Vacation'
-import Like from '../../models/Like'
 
 export default async function getOne(request: Request, response: Response, next: NextFunction) {
     try {
