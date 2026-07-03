@@ -40,7 +40,15 @@ function VacationForm({ title, initialVacation, onSubmit }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm(prev => {
+      const updated = { ...prev, [name]: value }
+      // clear end date if it's no longer after the new start date
+      if (name === 'startDate' && updated.endDate && updated.endDate <= value) {
+        updated.endDate = ''
+      }
+      return updated
+    })
   }
 
   function handleFile(e: ChangeEvent<HTMLInputElement>) {
@@ -112,7 +120,7 @@ function VacationForm({ title, initialVacation, onSubmit }: Props) {
           </label>
           <label className="form-label">
             End Date
-            <input type="date" name="endDate" required value={form.endDate} onChange={handleChange} />
+            <input type="date" name="endDate" required min={form.startDate || undefined} value={form.endDate} onChange={handleChange} />
           </label>
         </div>
 
