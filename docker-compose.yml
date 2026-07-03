@@ -1,8 +1,8 @@
 services:
 
   # MongoDB
-  mongo:
-    container_name: vacations-mongo
+  database:
+    container_name: vacations-db
     image: mongo:7.0
     environment:
       - MONGO_INITDB_DATABASE=vacations
@@ -17,19 +17,6 @@ services:
       retries: 5
       start_period: 20s
 
-  # Database seeder (runs once, then exits)
-  database:
-    container_name: vacations-database
-    environment:
-      - VACATIONS_MONGO_URI=mongodb://mongo:27017/vacations
-    build:
-      context: ./database
-      dockerfile: Dockerfile.compose
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: "no"
-
   # Backend REST API
   backend:
     container_name: vacations-backend
@@ -37,7 +24,7 @@ services:
       - 3001:3001
     environment:
       - NODE_ENV=production
-      - VACATIONS_MONGO_URI=mongodb://mongo:27017/vacations
+      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
       - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY}
       - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY}
       - MCP_URL=http://mcp:3002/mcp
@@ -46,7 +33,7 @@ services:
       dockerfile: Dockerfile.compose
     depends_on:
       database:
-        condition: service_completed_successfully
+        condition: service_healthy
 
   # MCP server
   mcp:
@@ -54,13 +41,13 @@ services:
     ports:
       - 3002:3002
     environment:
-      - VACATIONS_MONGO_URI=mongodb://mongo:27017/vacations
+      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
     build:
       context: ./mcp
       dockerfile: Dockerfile.compose
     depends_on:
       database:
-        condition: service_completed_successfully
+        condition: service_healthy
 
   # Frontend (React, served by nginx)
   frontend:
