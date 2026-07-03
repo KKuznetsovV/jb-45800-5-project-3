@@ -1,9 +1,9 @@
 services:
 
-  # MongoDB
+  # MongoDB (with embedded TypeScript seeder — runs on first init)
   database:
     container_name: vacations-db
-    image: mongo:7.0
+    build: ./database
     environment:
       - MONGO_INITDB_DATABASE=vacations
     expose:
@@ -15,7 +15,7 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   # MinIO object storage (vacation images)
   minio:
@@ -35,17 +35,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-
-  # Database seeder — runs once, seeds vacations + users, then exits
-  seeder:
-    container_name: vacations-seeder
-    build: ./database
-    environment:
-      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
-    depends_on:
-      database:
-        condition: service_healthy
-    restart: "no"
 
   # Backend REST API
   backend:
@@ -69,8 +58,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
       minio:
         condition: service_healthy
 
@@ -87,8 +74,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
 
   # Frontend (React, served by nginx)
   frontend:
