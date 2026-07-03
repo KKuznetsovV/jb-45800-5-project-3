@@ -16,7 +16,7 @@ export default async function remove(request: Request, response: Response, next:
         if (!vacation) return next({ status: 404, message: 'Vacation not found' })
 
         // Delete image file, all likes, then the vacation
-        deleteImage(vacation.imageName)
+        await deleteImage(vacation.imageName)
         await Like.deleteMany({ vacationId: new Types.ObjectId(id) })
         await vacation.deleteOne()
 

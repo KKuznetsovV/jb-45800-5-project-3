@@ -12,6 +12,7 @@ import EditVacation from './admin/EditVacation'
 import AiRecommend from './ai/AiRecommend'
 import McpChat from './mcp/McpChat'
 import Report from './report/Report'
+import OAuthCallback from './auth/OAuthCallback'
 
 function App() {
   return (
@@ -19,8 +20,9 @@ function App() {
       <Route path="/" element={<Navigate to="/vacations" replace />} />
 
       {/* guest-only routes */}
-      <Route path="/register" element={<GuestGuard><Register /></GuestGuard>} />
-      <Route path="/login"    element={<GuestGuard><Login /></GuestGuard>} />
+      <Route path="/register"       element={<GuestGuard><Register /></GuestGuard>} />
+      <Route path="/login"          element={<GuestGuard><Login /></GuestGuard>} />
+      <Route path="/oauth-callback" element={<OAuthCallback />} />
 
       {/* protected routes — navbar + content */}
       <Route element={<AuthGuard><Layout /></AuthGuard>}>

@@ -48,6 +48,13 @@ function Login() {
 
         <button type="submit">Login</button>
 
+        <div className="auth-divider"><span>or</span></div>
+
+        <button type="button" className="btn-google" onClick={() => window.location.href = '/api/auth/google'}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+          Continue with Google
+        </button>
+
         <p className="auth-link">
           Don't have an account? <Link to="/register">Register</Link>
         </p>

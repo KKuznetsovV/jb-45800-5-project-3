@@ -72,6 +72,13 @@ function Register() {
 
         <button type="submit">Register</button>
 
+        <div className="auth-divider"><span>or</span></div>
+
+        <button type="button" className="btn-google" onClick={() => window.location.href = '/api/auth/google'}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+          Sign up with Google
+        </button>
+
         <p className="auth-link">
           Already have an account? <Link to="/login">Login</Link>
         </p>

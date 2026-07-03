@@ -1,9 +1,9 @@
 services:
 
-  # MongoDB
+  # MongoDB (with embedded TypeScript seeder — runs on first init)
   database:
     container_name: vacations-db
-    image: mongo:7.0
+    build: ./database
     environment:
       - MONGO_INITDB_DATABASE=vacations
     expose:
@@ -15,18 +15,26 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
-  # Database seeder — runs once, seeds vacations + users, then exits
-  seeder:
-    container_name: vacations-seeder
-    build: ./database
+  # MinIO object storage (vacation images)
+  minio:
+    container_name: vacations-minio
+    build: ./minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
-    depends_on:
-      database:
-        condition: service_healthy
-    restart: "no"
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   # Backend REST API
   backend:
@@ -39,14 +47,23 @@ services:
       - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY}
       - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY}
       - MCP_URL=http://mcp:3002/mcp
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=vacations
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-http://localhost:3001/api/auth/google/callback}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
     build:
       context: ./backend
       dockerfile: Dockerfile.compose
     depends_on:
       database:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
 
   # MCP server
   mcp:
@@ -61,8 +78,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
 
   # Frontend (React, served by nginx)
   frontend:
@@ -75,3 +90,4 @@ services:
 
 volumes:
   mongo-data:
+  minio-data:

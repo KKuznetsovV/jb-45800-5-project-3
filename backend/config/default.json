@@ -13,5 +13,18 @@
   },
   "mcp": {
     "url": "http://localhost:3002/mcp"
+  },
+  "minio": {
+    "endPoint": "localhost",
+    "port": 9000,
+    "accessKey": "minioadmin",
+    "secretKey": "minioadmin",
+    "bucket": "vacations"
+  },
+  "google": {
+    "clientId": "",
+    "clientSecret": "",
+    "callbackUrl": "http://localhost:3001/api/auth/google/callback",
+    "frontendUrl": "http://localhost:3000"
   }
 }
