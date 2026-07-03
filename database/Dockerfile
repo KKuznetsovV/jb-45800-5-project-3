@@ -1,2 +1,13 @@
-FROM mongo:7.0
-COPY init.js /docker-entrypoint-initdb.d/init.js
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY --from=builder /app/dist ./dist
+CMD ["node", "dist/seed.js"]

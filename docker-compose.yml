@@ -1,9 +1,9 @@
 services:
 
-  # MongoDB — built from ./database (init.js seeds data on first start)
+  # MongoDB
   database:
     container_name: vacations-db
-    build: ./database
+    image: mongo:7.0
     environment:
       - MONGO_INITDB_DATABASE=vacations
     expose:
@@ -16,6 +16,17 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  # Database seeder — runs once, seeds vacations + users, then exits
+  seeder:
+    container_name: vacations-seeder
+    build: ./database
+    environment:
+      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: "no"
 
   # Backend REST API
   backend:
@@ -34,6 +45,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
 
   # MCP server
   mcp:
@@ -48,6 +61,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
 
   # Frontend (React, served by nginx)
   frontend:
