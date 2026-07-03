@@ -1,1 +1,8 @@
-{}
+{
+  "google": {
+    "clientId": "",
+    "clientSecret": "",
+    "callbackUrl": "http://localhost:3001/api/auth/google/callback",
+    "frontendUrl": "http://localhost:3000"
+  }
+}

@@ -12,6 +12,10 @@ export default async function login(request: Request, response: Response, next: 
             return next({ status: 401, message: 'Incorrect email or password' })
         }
 
+        if (!user.password) {
+            return next({ status: 401, message: 'This account uses Google sign-in. Please use the Google button.' })
+        }
+
         const passwordMatch = await bcrypt.compare(password, user.password)
         if (!passwordMatch) {
             return next({ status: 401, message: 'Incorrect email or password' })

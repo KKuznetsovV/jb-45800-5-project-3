@@ -2,6 +2,7 @@ import express, { json } from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import fileUpload from 'express-fileupload'
+import passport from 'passport'
 import authRouter from './routers/auth'
 import vacationsRouter from './routers/vacations'
 import likesRouter from './routers/likes'
@@ -21,6 +22,7 @@ const app = express()
 app.use(morgan('dev'))
 app.use('/', cors())
 app.use('/', json())
+app.use(passport.initialize())
 
 // proxy vacation images from MinIO
 app.get('/uploads/:imageName', serveImage)
