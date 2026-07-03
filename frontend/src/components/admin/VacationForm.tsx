@@ -69,8 +69,8 @@ function VacationForm({ title, initialVacation, onSubmit }: Props) {
     try {
       await onSubmit(fd)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg ?? 'Something went wrong')
+      const msg = (err as any)?.response?.data
+      setError(typeof msg === 'string' && msg ? msg : 'Something went wrong')
     } finally {
       setSubmitting(false)
     }
