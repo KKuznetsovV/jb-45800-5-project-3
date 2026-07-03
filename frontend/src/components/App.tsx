@@ -9,6 +9,8 @@ import VacationList from './vacations/VacationList'
 import About from './about/About'
 import AddVacation from './admin/AddVacation'
 import EditVacation from './admin/EditVacation'
+import AiRecommend from './ai/AiRecommend'
+import McpChat from './mcp/McpChat'
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
       <Route element={<AuthGuard><Layout /></AuthGuard>}>
         <Route path="/vacations"       element={<VacationList />} />
         <Route path="/about"           element={<About />} />
+        <Route path="/ai"              element={<AiRecommend />} />
+        <Route path="/mcp"             element={<McpChat />} />
         <Route path="/admin/add"       element={<AdminGuard><AddVacation /></AdminGuard>} />
         <Route path="/admin/edit/:id"  element={<AdminGuard><EditVacation /></AdminGuard>} />
       </Route>
