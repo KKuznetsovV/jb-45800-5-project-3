@@ -1,12 +1,29 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import AuthGuard from './routing/AuthGuard'
+import GuestGuard from './routing/GuestGuard'
+import Layout from './layout/Layout'
+import Register from './auth/Register'
+import Login from './auth/Login'
+import VacationList from './vacations/VacationList'
 
 function App() {
   return (
     <Routes>
-      {/* routes will be added in subsequent steps */}
       <Route path="/" element={<Navigate to="/vacations" replace />} />
+
+      {/* guest-only routes */}
+      <Route path="/register" element={<GuestGuard><Register /></GuestGuard>} />
+      <Route path="/login"    element={<GuestGuard><Login /></GuestGuard>} />
+
+      {/* protected routes — navbar + content */}
+      <Route element={<AuthGuard><Layout /></AuthGuard>}>
+        <Route path="/vacations" element={<VacationList />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/vacations" replace />} />
     </Routes>
   )
 }
 
 export default App
+
