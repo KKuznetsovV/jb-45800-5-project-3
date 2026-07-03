@@ -11,6 +11,7 @@ import AddVacation from './admin/AddVacation'
 import EditVacation from './admin/EditVacation'
 import AiRecommend from './ai/AiRecommend'
 import McpChat from './mcp/McpChat'
+import Report from './report/Report'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/about"           element={<About />} />
         <Route path="/ai"              element={<AiRecommend />} />
         <Route path="/mcp"             element={<McpChat />} />
+        <Route path="/report"          element={<AdminGuard><Report /></AdminGuard>} />
         <Route path="/admin/add"       element={<AdminGuard><AddVacation /></AdminGuard>} />
         <Route path="/admin/edit/:id"  element={<AdminGuard><EditVacation /></AdminGuard>} />
       </Route>

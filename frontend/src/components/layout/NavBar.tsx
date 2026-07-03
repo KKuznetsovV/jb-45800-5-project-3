@@ -22,7 +22,10 @@ function NavBar() {
         <Link to="/ai" className="navbar-link">AI Tips</Link>
         <Link to="/mcp" className="navbar-link">Ask AI</Link>
         {user?.role === 'admin' && (
-          <Link to="/admin/add" className="navbar-link navbar-link-admin">+ Add Vacation</Link>
+          <>
+            <Link to="/report" className="navbar-link">Report</Link>
+            <Link to="/admin/add" className="navbar-link navbar-link-admin">+ Add Vacation</Link>
+          </>
         )}
       </div>
       {user && (
