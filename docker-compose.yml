@@ -17,6 +17,25 @@ services:
       retries: 5
       start_period: 20s
 
+  # MinIO object storage (vacation images)
+  minio:
+    container_name: vacations-minio
+    build: ./minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
   # Database seeder — runs once, seeds vacations + users, then exits
   seeder:
     container_name: vacations-seeder
@@ -39,6 +58,11 @@ services:
       - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY}
       - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY}
       - MCP_URL=http://mcp:3002/mcp
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=vacations
     build:
       context: ./backend
       dockerfile: Dockerfile.compose
@@ -47,6 +71,8 @@ services:
         condition: service_healthy
       seeder:
         condition: service_completed_successfully
+      minio:
+        condition: service_healthy
 
   # MCP server
   mcp:
@@ -75,3 +101,4 @@ services:
 
 volumes:
   mongo-data:
+  minio-data:

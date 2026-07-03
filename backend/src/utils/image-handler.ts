@@ -1,18 +1,37 @@
 import path from 'path'
-import fs from 'fs'
 import { v4 as uuid } from 'uuid'
+import { Client } from 'minio'
+import config from 'config'
 import type { UploadedFile } from 'express-fileupload'
+
+const BUCKET = process.env.MINIO_BUCKET || config.get<string>('minio.bucket')
+
+export const minioClient = new Client({
+    endPoint:  process.env.MINIO_ENDPOINT  || config.get<string>('minio.endPoint'),
+    port:      Number(process.env.MINIO_PORT) || config.get<number>('minio.port'),
+    useSSL:    false,
+    accessKey: process.env.MINIO_ACCESS_KEY || config.get<string>('minio.accessKey'),
+    secretKey: process.env.MINIO_SECRET_KEY || config.get<string>('minio.secretKey'),
+})
+
+export async function initBucket(): Promise<void> {
+    const exists = await minioClient.bucketExists(BUCKET)
+    if (!exists) {
+        await minioClient.makeBucket(BUCKET)
+    }
+}
 
 export async function saveImage(file: UploadedFile): Promise<string> {
     const ext = path.extname(file.name).toLowerCase()
     const imageName = `${uuid()}${ext}`
-    await file.mv(`./uploads/${imageName}`)
+    await minioClient.putObject(BUCKET, imageName, file.data, file.size, { 'Content-Type': file.mimetype })
     return imageName
 }
 
-export function deleteImage(imageName: string): void {
-    const imagePath = `./uploads/${imageName}`
-    if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath)
+export async function deleteImage(imageName: string): Promise<void> {
+    try {
+        await minioClient.removeObject(BUCKET, imageName)
+    } catch {
+        // ignore — object may not exist
     }
 }

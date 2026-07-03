@@ -20,7 +20,7 @@ export default async function update(request: Request, response: Response, next:
         // Replace image only if a new one was uploaded
         const newImage = request.files?.image as UploadedFile | undefined
         if (newImage) {
-            deleteImage(existing.imageName)
+            await deleteImage(existing.imageName)
             updateData.imageName = await saveImage(newImage)
         }
 

@@ -13,6 +13,8 @@ import notFound from './middlewares/not-found'
 import logError from './middlewares/error/log-error'
 import respondError from './middlewares/error/error-responder'
 import connectDB from './db/mongoose'
+import { initBucket } from './utils/image-handler'
+import serveImage from './controllers/images/serve'
 
 const app = express()
 
@@ -20,8 +22,8 @@ app.use(morgan('dev'))
 app.use('/', cors())
 app.use('/', json())
 
-// serve uploaded vacation images
-app.use('/uploads', express.static('uploads'))
+// proxy vacation images from MinIO
+app.get('/uploads/:imageName', serveImage)
 
 // public routes
 app.use('/api/auth', authRouter)
@@ -43,4 +45,5 @@ export default app
 
 export async function init() {
     await connectDB()
+    await initBucket()
 }
