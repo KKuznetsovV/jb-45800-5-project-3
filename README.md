@@ -9,11 +9,12 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 - **Browse vacations** — paginated grid (9 per page) with filter tabs: All, My Likes, Active, Upcoming
 - **Like / Unlike** vacations with live counter updates
 - **Auth** — register, login with JWT, role-based access (user / admin)
-- **Admin panel** — add, edit and delete vacations with image upload
+- **Google OAuth** — sign in or register via Google account
+- **Admin panel** — add, edit and delete vacations with image upload (stored in MinIO)
 - **AI recommendation** — enter a destination, get a GPT-4o-mini travel tip
 - **MCP chat** — ask natural-language questions answered from live vacation data
 - **Likes report** — admin bar chart (Recharts) with CSV export
-- **Dockerized** — one command spins up all 4 services
+- **Dockerized** — one command spins up all 5 services
 
 ---
 
@@ -22,11 +23,12 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 | Layer | Technology |
 |---|---|
 | Frontend | React 18, Vite, TypeScript, Redux Toolkit, React Router v6, Recharts |
-| Backend | Node.js, Express, TypeScript, Mongoose, Joi, JWT, bcryptjs |
+| Backend | Node.js, Express, TypeScript, Mongoose, Joi, JWT, bcryptjs, Passport.js |
 | Database | MongoDB 7.0 |
+| Object Storage | MinIO (S3-compatible, vacation images) |
 | AI | OpenAI SDK (gpt-4o-mini) |
 | MCP Server | @modelcontextprotocol/sdk, StreamableHTTPServerTransport |
-| Infrastructure | Docker, docker-compose, nginx |
+| Infrastructure | Docker, docker compose, nginx |
 
 ---
 
@@ -38,17 +40,28 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 
 ### 2. Environment variables
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+```
 
 ```env
+# Required
 VACATIONS_ENCRYPTION_KEY=your_jwt_secret_key_here
-VACATIONS_OPENAI_API_KEY=your_openai_api_key_here
+VACATIONS_OPENAI_API_KEY=sk-your_openai_key_here
+
+# Optional — enables Google OAuth (leave empty to disable)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
+FRONTEND_URL=http://localhost
 ```
 
 ### 3. Run
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 | Service | URL |
@@ -56,8 +69,9 @@ docker-compose up --build
 | Frontend | http://localhost |
 | Backend API | http://localhost:3001/api |
 | MCP Server | http://localhost:3002/mcp |
+| MinIO Console | http://localhost:9001 (minioadmin / minioadmin) |
 
-The backend automatically seeds the database on first run (vacations + admin + test user).
+The database container seeds vacations, an admin user, and a test user automatically on first start.
 
 ---
 
@@ -67,6 +81,18 @@ The backend automatically seeds the database on first run (vacations + admin + t
 |---|---|---|
 | Admin | admin@vacations.com | Admin1234 |
 | User | user@vacations.com | User1234 |
+
+---
+
+## Google OAuth Setup (optional)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials
+2. Create an **OAuth 2.0 Client ID** (Web application)
+3. Add `http://localhost:3001/api/auth/google/callback` as an authorized redirect URI
+4. Copy the Client ID and Client Secret into your `.env`
+5. Restart the backend: `docker compose up -d backend`
+
+If `GOOGLE_CLIENT_ID` is empty the feature is silently disabled — all other functionality works normally.
 
 ---
 
@@ -80,13 +106,23 @@ cd backend  && npm install
 cd ../mcp   && npm install
 cd ../frontend && npm install
 
-# 2. Seed the database
-cd ../backend && npx ts-node src/db/seed.ts
-
-# 3. Start services (each in a separate terminal)
+# 2. Start services (each in a separate terminal)
 cd backend  && npm run dev     # port 3001
 cd mcp      && npm run dev     # port 3002
 cd frontend && npm run dev     # port 3000
+```
+
+> **Note:** Image uploads require MinIO running locally. Start it with:
+> `docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"`
+
+---
+
+## Running Tests
+
+Integration tests use Jest + Supertest + mongodb-memory-server (no running database needed).
+
+```bash
+cd backend && npm test
 ```
 
 ---
@@ -97,20 +133,24 @@ cd frontend && npm run dev     # port 3000
 jb-45800-5-project-3/
 ├── backend/                  # Express REST API (port 3001)
 │   ├── src/
-│   │   ├── app.ts            # Express app & middleware
+│   │   ├── app.ts            # Express app & middleware setup
 │   │   ├── server.ts         # HTTP server entry point
 │   │   ├── models/           # Mongoose models (User, Vacation, Like)
 │   │   ├── controllers/
-│   │   │   ├── auth/         # register, login
+│   │   │   ├── auth/         # register, login, Google OAuth
 │   │   │   ├── vacations/    # CRUD + pagination/filter aggregation
 │   │   │   ├── likes/        # like, unlike
 │   │   │   ├── report/       # JSON report, CSV export
 │   │   │   ├── ai/           # OpenAI recommendation
+│   │   │   ├── images/       # MinIO image proxy
 │   │   │   └── mcp/          # MCP client proxy
-│   │   ├── middleware/       # authEnforce, bodyValidation
-│   │   ├── db/seed.ts        # Database seeder
-│   │   └── utils/            # JWT helpers, image utils
+│   │   ├── middlewares/      # authEnforce, bodyValidation, error handling
+│   │   └── utils/            # JWT helpers, MinIO image handler
 │   └── config/               # node-config (default.json, custom-environment-variables.json)
+│
+├── database/                 # Custom MongoDB image with embedded TypeScript seeder
+│   ├── Dockerfile            # Multi-stage: compiles TS seeder → mongo:7.0 image
+│   └── src/seed.ts           # Seeder (runs automatically on first container init)
 │
 ├── mcp/                      # MCP server (port 3002)
 │   └── src/server.ts         # Tools: list_vacations, search_vacations
@@ -118,7 +158,7 @@ jb-45800-5-project-3/
 ├── frontend/                 # React SPA (port 3000 dev / 80 Docker)
 │   └── src/
 │       ├── components/
-│       │   ├── auth/         # Register, Login
+│       │   ├── auth/         # Register, Login, OAuthCallback
 │       │   ├── vacations/    # VacationList, VacationCard
 │       │   ├── admin/        # VacationForm, AddVacation, EditVacation
 │       │   ├── ai/           # AiRecommend
@@ -144,11 +184,14 @@ All routes except `/api/auth/*` require `Authorization: Bearer <token>`.
 |---|---|---|---|
 | POST | `/api/auth/register` | Public | Register new user |
 | POST | `/api/auth/login` | Public | Login, returns JWT |
+| GET | `/api/auth/google` | Public | Redirect to Google OAuth consent screen |
+| GET | `/api/auth/google/callback` | Public | Google OAuth callback |
 | GET | `/api/vacations` | User | List vacations (`?page=&filter=`) |
 | GET | `/api/vacations/:id` | User | Get single vacation |
 | POST | `/api/vacations` | Admin | Add vacation (multipart) |
 | PUT | `/api/vacations/:id` | Admin | Update vacation (multipart) |
 | DELETE | `/api/vacations/:id` | Admin | Delete vacation |
+| GET | `/uploads/:imageName` | User | Serve vacation image from MinIO |
 | POST | `/api/likes/:vacationId` | User | Like a vacation |
 | DELETE | `/api/likes/:vacationId` | User | Unlike a vacation |
 | GET | `/api/report` | Admin | Likes report JSON |
