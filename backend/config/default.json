@@ -3,7 +3,7 @@
     "name": "vacations-api",
     "port": 3001,
     "encryptionKey": "dev-secret-key-change-in-production",
-    "tokenExpiry": "7d",
+    "tokenExpiry": "1d",
     "sync": {
       "force": false
     }

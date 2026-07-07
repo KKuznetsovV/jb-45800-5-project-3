@@ -1,5 +1,6 @@
 import express, { json } from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import morgan from 'morgan'
 import fileUpload from 'express-fileupload'
 import passport from 'passport'
@@ -19,8 +20,9 @@ import serveImage from './controllers/images/serve'
 
 const app = express()
 
-app.use(morgan('dev'))
-app.use('/', cors())
+app.use(helmet())
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
+app.use('/', cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }))
 app.use('/', json())
 app.use(passport.initialize())
 
@@ -32,7 +34,7 @@ app.use('/api/auth', authRouter)
 
 // protected routes
 app.use('/', authEnforce)
-app.use('/', fileUpload())
+app.use('/', fileUpload({ limits: { fileSize: 5 * 1024 * 1024 } }))
 app.use('/api/vacations', vacationsRouter)
 app.use('/api/likes', likesRouter)
 app.use('/api/report', reportRouter)

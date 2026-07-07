@@ -22,6 +22,10 @@ export async function initBucket(): Promise<void> {
 }
 
 export async function saveImage(file: UploadedFile): Promise<string> {
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        throw { status: 422, message: 'Only JPEG, PNG, WebP, and GIF images are allowed' }
+    }
     const ext = path.extname(file.name).toLowerCase()
     const imageName = `${uuid()}${ext}`
     await minioClient.putObject(BUCKET, imageName, file.data, file.size, { 'Content-Type': file.mimetype })

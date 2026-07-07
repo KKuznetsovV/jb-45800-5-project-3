@@ -6,6 +6,8 @@ services:
     build: ./database
     environment:
       - MONGO_INITDB_DATABASE=vacations
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
     expose:
       - 27017
     volumes:
@@ -26,8 +28,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio-data:/data
     healthcheck:
@@ -44,14 +46,14 @@ services:
       - 3001:3001
     environment:
       - NODE_ENV=production
-      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@database:27017/vacations?authSource=admin
       - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY}
       - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY}
       - MCP_URL=http://mcp:3002/mcp
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - MINIO_BUCKET=vacations
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -69,10 +71,10 @@ services:
   # MCP server
   mcp:
     container_name: vacations-mcp
-    ports:
-      - 3002:3002
+    expose:
+      - 3002
     environment:
-      - VACATIONS_MONGO_URI=mongodb://database:27017/vacations
+      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@database:27017/vacations?authSource=admin
     build:
       context: ./mcp
       dockerfile: Dockerfile.compose
