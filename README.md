@@ -51,6 +51,14 @@ cp .env.example .env
 VACATIONS_ENCRYPTION_KEY=your_jwt_secret_key_here
 VACATIONS_OPENAI_API_KEY=sk-your_openai_key_here
 
+# MinIO object storage credentials
+MINIO_ROOT_USER=minio_admin
+MINIO_ROOT_PASSWORD=MinioSecure2024
+
+# MongoDB root credentials
+MONGO_ROOT_USERNAME=mongo_admin
+MONGO_ROOT_PASSWORD=MongoSecure2024
+
 # Optional — enables Google OAuth (leave empty to disable)
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -68,10 +76,13 @@ docker compose up --build
 |---|---|
 | Frontend | http://localhost |
 | Backend API | http://localhost:3001/api |
-| MCP Server | http://localhost:3002/mcp |
-| MinIO Console | http://localhost:9001 (minioadmin / minioadmin) |
+| MinIO Console | http://localhost:9001 (`MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from `.env`) |
+
+> **Note:** MCP server runs on an internal Docker network only and is not exposed to the host.
 
 The database container seeds vacations, an admin user, and a test user automatically on first start.
+
+> **First run or after credential changes:** run `docker compose down -v` before `docker compose up --build` to allow MongoDB to reinitialise with the credentials in your `.env`.
 
 ---
 
