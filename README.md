@@ -38,35 +38,9 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-### 2. Environment variables
+### 2. Run
 
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
-cp .env.example .env
-```
-
-```env
-# Required
-VACATIONS_ENCRYPTION_KEY=your_jwt_secret_key_here
-VACATIONS_OPENAI_API_KEY=sk-your_openai_key_here
-
-# MinIO object storage credentials
-MINIO_ROOT_USER=minio_admin
-MINIO_ROOT_PASSWORD=MinioSecure2024
-
-# MongoDB root credentials
-MONGO_ROOT_USERNAME=mongo_admin
-MONGO_ROOT_PASSWORD=MongoSecure2024
-
-# Optional — enables Google OAuth (leave empty to disable)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
-FRONTEND_URL=http://localhost
-```
-
-### 3. Run
+No setup needed — Mongo/MinIO credentials and the JWT signing key have safe defaults baked into `docker-compose.yml`, so the stack runs with zero configuration:
 
 ```bash
 docker compose up --build
@@ -76,13 +50,32 @@ docker compose up --build
 |---|---|
 | Frontend | http://localhost |
 | Backend API | http://localhost:3001/api |
-| MinIO Console | http://localhost:9001 (`MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from `.env`) |
+| MinIO Console | http://localhost:9001 (`minio_admin` / `MinioSecure2024` by default) |
 
 > **Note:** MCP server runs on an internal Docker network only and is not exposed to the host.
 
 The database container seeds vacations, an admin user, and a test user automatically on first start.
 
-> **First run or after credential changes:** run `docker compose down -v` before `docker compose up --build` to allow MongoDB to reinitialise with the credentials in your `.env`.
+### 3. Environment variables (optional)
+
+Two features are disabled until you provide your own secrets. Copy `.env.example` to `.env` and fill in only what you need — everything else already has a working default:
+
+```bash
+cp .env.example .env
+```
+
+```env
+# Enables the AI travel recommendation feature (leave unset to disable it)
+VACATIONS_OPENAI_API_KEY=sk-your_openai_key_here
+
+# Enables "Sign in with Google" (leave unset to disable it)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+Then restart the stack: `docker compose up -d --build backend`.
+
+> **Changing MONGO_ROOT_* / MINIO_ROOT_* / VACATIONS_ENCRYPTION_KEY after the first run?** These are only applied the first time each volume is created. Run `docker compose down -v` before `docker compose up --build` so MongoDB/MinIO reinitialise with the new values — otherwise you'll get `Authentication failed` errors.
 
 ---
 
@@ -104,6 +97,34 @@ The database container seeds vacations, an admin user, and a test user automatic
 5. Restart the backend: `docker compose up -d backend`
 
 If `GOOGLE_CLIENT_ID` is empty the feature is silently disabled — all other functionality works normally.
+
+---
+
+## Troubleshooting
+
+### `Error response ... failed to resolve reference "docker.io/minio/minio:latest": ... 403 Forbidden`
+
+This is a Docker Hub registry issue on the local machine, not a project bug — it happens when the anonymous pull rate limit has been hit or Docker Desktop isn't authenticated with Docker Hub. Fix by logging in, then retrying:
+
+```bash
+docker login
+docker compose up --build
+```
+
+If it still fails, check for a proxy/VPN/firewall blocking `registry-1.docker.io`.
+
+### Backend/mongosh gets `MongoServerError: Authentication failed` (code 18)
+
+MongoDB only applies `MONGO_ROOT_USERNAME`/`MONGO_ROOT_PASSWORD` (and MinIO its `MINIO_ROOT_*` vars) the very first time it initializes an **empty** data volume. If you add/change these in `.env` after the volume already exists, the running container keeps the old credentials, so the backend fails to authenticate with the new ones. (You can confirm this by exec-ing into the `vacations-db` container and running `mongosh` with no credentials — if it connects without a password, the volume was initialized without auth.)
+
+Fix by wiping the volumes and reinitializing with the current credentials:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+> ⚠️ `down -v` deletes all data in `mongo-data` and `minio-data` (vacations, users, uploaded images). Only do this on a fresh/dev setup, not on a machine with real data you want to keep.
 
 ---
 
