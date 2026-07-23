@@ -1,9 +1,9 @@
 services:
 
-  # MongoDB (with embedded TypeScript seeder — runs on first init)
+  # MongoDB
   database:
     container_name: vacations-db
-    build: ./database
+    image: mongo:7.0
     environment:
       - MONGO_INITDB_DATABASE=vacations
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-mongo_admin}
@@ -18,6 +18,17 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  # One-shot TypeScript seeder — runs once against `database` over the
+  # network, then exits. Idempotent: skips if vacations already seeded.
+  seeder:
+    container_name: vacations-seeder
+    build: ./database
+    environment:
+      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-mongo_admin}:${MONGO_ROOT_PASSWORD:-MongoSecure2024}@database:27017/vacations?authSource=admin
+    depends_on:
+      database:
+        condition: service_healthy
 
   # MinIO object storage (vacation images)
   minio:
@@ -67,6 +78,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
 
   # MCP server
   mcp:
@@ -81,6 +94,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
 
   # Frontend (React, served by nginx)
   frontend:
