@@ -10,22 +10,24 @@ jest.mock('../utils/image-handler', () => ({
     deleteImage: jest.fn(),
 }))
 
-import mongoose from 'mongoose'
-import { MongoMemoryServer } from 'mongodb-memory-server'
+import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql'
 import request from 'supertest'
 import bcrypt from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
 import app from '../app'
+import { closeSequelize } from '../db/sequelize'
+import { initSchema } from '../db/schema'
 import User, { Role } from '../models/User'
 
-let mongod: MongoMemoryServer
+let container: StartedMySqlContainer
 let userToken: string
 let adminToken: string
 
 beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    await mongoose.connect(mongod.getUri())
+    container = await new MySqlContainer('mysql:8.0').start()
+    process.env.VACATIONS_MYSQL_URI = container.getConnectionUri()
+    await initSchema()
 
     // Register regular user
     await request(app).post('/api/auth/register').send({
@@ -44,7 +46,7 @@ beforeAll(async () => {
         email: 'admin@test.com', password: 'Admin1234',
     })
     adminToken = adminRes.body.token
-})
+}, 120000)
 
 afterAll(async () => {
     // clean up any test images saved to uploads/
@@ -54,9 +56,8 @@ afterAll(async () => {
             if (file.startsWith('test-')) fs.unlinkSync(path.join(uploadsDir, file))
         }
     }
-    await mongoose.connection.dropDatabase()
-    await mongoose.connection.close()
-    await mongod.stop()
+    await closeSequelize()
+    await container.stop()
 })
 
 describe('GET /api/vacations', () => {

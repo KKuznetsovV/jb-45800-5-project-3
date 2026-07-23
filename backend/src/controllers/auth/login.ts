@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
-import User from '../../models/User'
+import User, { toJSON } from '../../models/User'
 import { signToken } from '../../utils/jwt'
 
 export default async function login(request: Request, response: Response, next: NextFunction) {
     try {
         const { email, password } = request.body
 
-        const user = await User.findOne({ email })
+        const user = await User.findByEmail(email)
         if (!user) {
             return next({ status: 401, message: 'Incorrect email or password' })
         }
@@ -21,16 +21,10 @@ export default async function login(request: Request, response: Response, next: 
             return next({ status: 401, message: 'Incorrect email or password' })
         }
 
-        const token = signToken({ id: user._id.toString(), role: user.role })
+        const token = signToken({ id: String(user.id), role: user.role })
 
         response.json({
-            user: {
-                _id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                role: user.role
-            },
+            user: toJSON(user),
             token
         })
     } catch (err) {

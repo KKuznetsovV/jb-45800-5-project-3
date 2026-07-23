@@ -1,16 +1,68 @@
-import { Schema, model, Types } from 'mongoose'
+import { Model, DataTypes, Sequelize } from 'sequelize'
 
 export interface ILike {
-    userId: Types.ObjectId
-    vacationId: Types.ObjectId
+    id: number
+    userId: number
+    vacationId: number
 }
 
-const likeSchema = new Schema<ILike>({
-    userId:     { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    vacationId: { type: Schema.Types.ObjectId, ref: 'Vacation', required: true }
-}, { timestamps: true })
+export interface LikeInput {
+    userId: number
+    vacationId: number
+}
 
-// ensure a user can only like a vacation once
-likeSchema.index({ userId: 1, vacationId: 1 }, { unique: true })
+export class LikeModel extends Model<ILike, LikeInput> implements ILike {
+    declare id: number
+    declare userId: number
+    declare vacationId: number
+}
 
-export default model<ILike>('Like', likeSchema)
+export function initLikeModel(sequelize: Sequelize): void {
+    LikeModel.init({
+        id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+        userId: { type: DataTypes.INTEGER, allowNull: false },
+        vacationId: { type: DataTypes.INTEGER, allowNull: false }
+    }, {
+        sequelize,
+        modelName: 'Like',
+        tableName: 'likes',
+        indexes: [{ unique: true, fields: ['userId', 'vacationId'] }]
+    })
+}
+
+// Normalize Sequelize's unique-constraint error to the same shape the
+// controllers already check for (`err.code === 'ER_DUP_ENTRY'`), matching
+// the raw mysql2 driver's error code.
+function normalizeDupError(err: any): never {
+    if (err.name === 'SequelizeUniqueConstraintError') {
+        throw Object.assign(new Error(err.message), { code: 'ER_DUP_ENTRY' })
+    }
+    throw err
+}
+
+const Like = {
+    async create(data: LikeInput): Promise<ILike> {
+        try {
+            const like = await LikeModel.create(data)
+            return like.get({ plain: true }) as ILike
+        } catch (err: any) {
+            return normalizeDupError(err)
+        }
+    },
+
+    // Returns true if a row was actually deleted
+    async deleteOne(data: LikeInput): Promise<boolean> {
+        const count = await LikeModel.destroy({ where: data as any })
+        return count > 0
+    },
+
+    async deleteByVacationId(vacationId: number | string): Promise<void> {
+        await LikeModel.destroy({ where: { vacationId } })
+    },
+
+    async countByVacationId(vacationId: number | string): Promise<number> {
+        return LikeModel.count({ where: { vacationId } })
+    }
+}
+
+export default Like

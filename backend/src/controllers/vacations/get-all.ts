@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
-import { Types } from 'mongoose'
-import Vacation from '../../models/Vacation'
+import { QueryTypes } from 'sequelize'
+import { getSequelize } from '../../db/sequelize'
 
 const PAGE_SIZE = 9
 
@@ -8,56 +8,56 @@ export default async function getAll(request: Request, response: Response, next:
     try {
         const page = Math.max(1, parseInt(request.query.page as string) || 1)
         const filter = request.query.filter as string | undefined
-        const skip = (page - 1) * PAGE_SIZE
-        const userId = new Types.ObjectId(request.userId)
+        const offset = (page - 1) * PAGE_SIZE
+        const userId = Number(request.userId)
         const now = new Date()
 
-        // Base pipeline: join likes, compute likesCount & isLiked per user
-        const basePipeline: any[] = [
-            {
-                $lookup: {
-                    from: 'likes',
-                    localField: '_id',
-                    foreignField: 'vacationId',
-                    as: 'likes'
-                }
-            },
-            {
-                $addFields: {
-                    likesCount: { $size: '$likes' },
-                    isLiked:    { $in: [userId, '$likes.userId'] }
-                }
-            },
-            { $project: { likes: 0 } }
-        ]
+        // Mutually-exclusive filter, applied as a WHERE clause
+        let whereClause = ''
+        const whereParams: any[] = []
 
-        // Apply mutually-exclusive filter
         if (filter === 'liked') {
-            basePipeline.push({ $match: { isLiked: true } })
+            whereClause = 'WHERE EXISTS (SELECT 1 FROM likes l WHERE l.vacationId = v.id AND l.userId = ?)'
+            whereParams.push(userId)
         } else if (filter === 'active') {
-            basePipeline.push({ $match: { startDate: { $lte: now }, endDate: { $gte: now } } })
+            whereClause = 'WHERE v.startDate <= ? AND v.endDate >= ?'
+            whereParams.push(now, now)
         } else if (filter === 'upcoming') {
-            basePipeline.push({ $match: { startDate: { $gt: now } } })
+            whereClause = 'WHERE v.startDate > ?'
+            whereParams.push(now)
         }
 
-        // $facet: paginated data + total count in one round-trip
-        const [result] = await Vacation.aggregate([
-            ...basePipeline,
-            {
-                $facet: {
-                    data: [
-                        { $sort: { startDate: 1 } },
-                        { $skip: skip },
-                        { $limit: PAGE_SIZE }
-                    ],
-                    totalCount: [{ $count: 'count' }]
-                }
-            }
-        ])
+        const sequelize = getSequelize()
 
-        const vacations = result.data
-        const total = result.totalCount[0]?.count ?? 0
+        const countRows = await sequelize.query<{ count: number }>(
+            `SELECT COUNT(*) AS count FROM vacations v ${whereClause}`,
+            { replacements: whereParams, type: QueryTypes.SELECT }
+        )
+        const total = Number(countRows[0].count)
         const pages = Math.ceil(total / PAGE_SIZE)
+
+        const rows = await sequelize.query<any>(
+            `SELECT v.id, v.destination, v.description, v.startDate, v.endDate, v.price, v.imageName,
+                    (SELECT COUNT(*) FROM likes l2 WHERE l2.vacationId = v.id) AS likesCount,
+                    EXISTS(SELECT 1 FROM likes l3 WHERE l3.vacationId = v.id AND l3.userId = ?) AS isLiked
+             FROM vacations v
+             ${whereClause}
+             ORDER BY v.startDate ASC
+             LIMIT ? OFFSET ?`,
+            { replacements: [userId, ...whereParams, PAGE_SIZE, offset], type: QueryTypes.SELECT }
+        )
+
+        const vacations = rows.map(row => ({
+            _id: String(row.id),
+            destination: row.destination,
+            description: row.description,
+            startDate: row.startDate,
+            endDate: row.endDate,
+            price: Number(row.price),
+            imageName: row.imageName,
+            likesCount: Number(row.likesCount),
+            isLiked: Boolean(row.isLiked)
+        }))
 
         response.json({ vacations, total, page, pages })
     } catch (err) {

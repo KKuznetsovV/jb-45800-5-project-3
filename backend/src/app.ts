@@ -14,7 +14,7 @@ import authEnforce from './middlewares/auth-enforce'
 import notFound from './middlewares/not-found'
 import logError from './middlewares/error/log-error'
 import respondError from './middlewares/error/error-responder'
-import connectDB from './db/mongoose'
+import connectDB from './db/sequelize'
 import { initBucket } from './utils/image-handler'
 import serveImage from './controllers/images/serve'
 

@@ -69,7 +69,7 @@ function About() {
         <div className="tech-card">
           <h3>Database & Infra</h3>
           <ul>
-            <li>MongoDB 7 + Mongoose</li>
+            <li>MySQL 8 + Sequelize</li>
             <li>Docker + Compose</li>
             <li>OpenAI GPT-4o-mini</li>
             <li>MCP protocol server</li>

@@ -3,7 +3,7 @@
     "encryptionKey": "VACATIONS_ENCRYPTION_KEY"
   },
   "db": {
-    "uri": "VACATIONS_MONGO_URI"
+    "uri": "VACATIONS_MYSQL_URI"
   },
   "mcp": {
     "url": "MCP_URL"

@@ -18,16 +18,18 @@ function VacationCard({ vacation, onLikeToggle, onEdit, onDelete }: Props) {
 
   return (
     <div className="vacation-card">
-      <div className="vacation-card-image-wrap">
-        <img
-          src={`/uploads/${vacation.imageName}`}
-          alt={vacation.destination}
-          onError={(e) => {
-            const img = e.target as HTMLImageElement
-            img.style.display = 'none'
-            img.parentElement!.classList.add('no-image')
-          }}
-        />
+      <div className={`vacation-card-image-wrap${vacation.imageName ? '' : ' no-image'}`}>
+        {vacation.imageName && (
+          <img
+            src={`/uploads/${vacation.imageName}`}
+            alt={vacation.destination}
+            onError={(e) => {
+              const img = e.target as HTMLImageElement
+              img.style.display = 'none'
+              img.parentElement!.classList.add('no-image')
+            }}
+          />
+        )}
         <button
           className={`like-btn ${vacation.isLiked ? 'liked' : ''}`}
           onClick={() => onLikeToggle(vacation._id, vacation.isLiked)}

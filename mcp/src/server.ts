@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express'
-import mongoose from 'mongoose'
+import { Sequelize } from 'sequelize'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import {
     ListToolsRequestSchema,
     CallToolRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
-import Vacation from './models/Vacation'
+import Vacation, { initVacationModel } from './models/Vacation'
 
 const app = express()
 app.use(express.json())
@@ -39,15 +39,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params
 
     if (name === 'list_vacations') {
-        const vacations = await Vacation.find({}).lean()
+        const vacations = await Vacation.findAll()
         return { content: [{ type: 'text' as const, text: JSON.stringify(vacations, null, 2) }] }
     }
 
     if (name === 'search_vacations') {
         const { destination } = args as { destination: string }
-        const vacations = await Vacation.find({
-            destination: { $regex: destination, $options: 'i' }
-        }).lean()
+        const vacations = await Vacation.findByDestination(destination)
         return { content: [{ type: 'text' as const, text: JSON.stringify(vacations, null, 2) }] }
     }
 
@@ -63,9 +61,11 @@ app.post('/mcp', async (req: Request, res: Response) => {
 })
 
 async function start() {
-    const uri = process.env.VACATIONS_MONGO_URI || 'mongodb://localhost:27017/vacations'
-    await mongoose.connect(uri)
-    console.log('MCP server connected to MongoDB')
+    const uri = process.env.VACATIONS_MYSQL_URI || 'mysql://root:root@localhost:3306/vacations'
+    const sequelize = new Sequelize(uri, { dialect: 'mysql', logging: false })
+    await sequelize.authenticate()
+    initVacationModel(sequelize)
+    console.log('MCP server connected to MySQL')
 
     app.listen(3002, () => {
         console.log('MCP server running on port 3002')

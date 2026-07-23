@@ -10,21 +10,23 @@ jest.mock('../utils/image-handler', () => ({
     deleteImage: jest.fn(),
 }))
 
-import mongoose from 'mongoose'
-import { MongoMemoryServer } from 'mongodb-memory-server'
+import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql'
 import request from 'supertest'
 import bcrypt from 'bcryptjs'
 import app from '../app'
+import { closeSequelize } from '../db/sequelize'
+import { initSchema } from '../db/schema'
 import User, { Role } from '../models/User'
 
-let mongod: MongoMemoryServer
+let container: StartedMySqlContainer
 let userToken: string
 let adminToken: string
 let vacationId: string
 
 beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    await mongoose.connect(mongod.getUri())
+    container = await new MySqlContainer('mysql:8.0').start()
+    process.env.VACATIONS_MYSQL_URI = container.getConnectionUri()
+    await initSchema()
 
     // Regular user
     await request(app).post('/api/auth/register').send({
@@ -55,12 +57,11 @@ beforeAll(async () => {
         .field('price', '500')
         .attach('image', Buffer.from('fake image'), 'photo.jpg')
     vacationId = vacRes.body._id
-})
+}, 120000)
 
 afterAll(async () => {
-    await mongoose.connection.dropDatabase()
-    await mongoose.connection.close()
-    await mongod.stop()
+    await closeSequelize()
+    await container.stop()
 })
 
 describe('POST /api/likes/:vacationId', () => {

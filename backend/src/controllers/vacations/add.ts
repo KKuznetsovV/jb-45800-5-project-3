@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { UploadedFile } from 'express-fileupload'
-import Vacation from '../../models/Vacation'
+import Vacation, { toJSON } from '../../models/Vacation'
 import { saveImage } from '../../utils/image-handler'
 
 export default async function add(request: Request, response: Response, next: NextFunction) {
@@ -15,7 +15,7 @@ export default async function add(request: Request, response: Response, next: Ne
             imageName
         })
 
-        response.status(201).json(vacation)
+        response.status(201).json(toJSON(vacation))
     } catch (err) {
         next(err)
     }

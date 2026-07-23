@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
-import User, { Role } from '../../models/User'
+import User, { Role, toJSON } from '../../models/User'
 import { signToken } from '../../utils/jwt'
 
 export default async function register(request: Request, response: Response, next: NextFunction) {
@@ -17,21 +17,15 @@ export default async function register(request: Request, response: Response, nex
             role: Role.User
         })
 
-        const token = signToken({ id: user._id.toString(), role: user.role })
+        const token = signToken({ id: String(user.id), role: user.role })
 
         response.status(201).json({
-            user: {
-                _id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                role: user.role
-            },
+            user: toJSON(user),
             token
         })
     } catch (err: any) {
-        // MongoDB duplicate key error (unique index on email)
-        if (err.code === 11000) {
+        // MySQL duplicate key error (unique index on email)
+        if (err.code === 'ER_DUP_ENTRY') {
             return next({ status: 409, message: 'Email is already registered' })
         }
         next(err)

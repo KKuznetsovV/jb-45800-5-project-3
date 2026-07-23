@@ -5,27 +5,35 @@ jest.mock('openai', () => {
     return { __esModule: true, default: MockOpenAI, OpenAI: MockOpenAI }
 })
 
-import mongoose from 'mongoose'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-import request from 'supertest'
-import app from '../app'
-
-let mongod: MongoMemoryServer
-
-beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    await mongoose.connect(mongod.getUri())
+jest.mock('openai', () => {
+    const MockOpenAI = jest.fn().mockImplementation(() => ({
+        chat: { completions: { create: jest.fn() } },
+    }))
+    return { __esModule: true, default: MockOpenAI, OpenAI: MockOpenAI }
 })
 
+import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql'
+import request from 'supertest'
+import app from '../app'
+import { getSequelize, closeSequelize } from '../db/sequelize'
+import { initSchema } from '../db/schema'
+
+let container: StartedMySqlContainer
+
+beforeAll(async () => {
+    container = await new MySqlContainer('mysql:8.0').start()
+    process.env.VACATIONS_MYSQL_URI = container.getConnectionUri()
+    await initSchema()
+}, 120000)
+
 afterAll(async () => {
-    await mongoose.connection.dropDatabase()
-    await mongoose.connection.close()
-    await mongod.stop()
+    await closeSequelize()
+    await container.stop()
 })
 
 // clear users between describe blocks
 afterEach(async () => {
-    await mongoose.connection.collections.users?.deleteMany({})
+    await getSequelize().query('DELETE FROM users')
 })
 
 describe('POST /api/auth/register', () => {

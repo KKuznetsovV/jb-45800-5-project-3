@@ -1,6 +1,6 @@
 # Vacations Booking App
 
-A full-stack vacation browsing and likes application built with React, Node.js/Express, MongoDB and TypeScript.
+A full-stack vacation browsing and likes application built with React, Node.js/Express, MySQL and TypeScript.
 
 ---
 
@@ -23,8 +23,8 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 | Layer | Technology |
 |---|---|
 | Frontend | React 18, Vite, TypeScript, Redux Toolkit, React Router v6, Recharts |
-| Backend | Node.js, Express, TypeScript, Mongoose, Joi, JWT, bcryptjs, Passport.js |
-| Database | MongoDB 7.0 |
+| Backend | Node.js, Express, TypeScript, Sequelize (mysql2 driver), Joi, JWT, bcryptjs, Passport.js |
+| Database | MySQL 8.0 |
 | Object Storage | MinIO (S3-compatible, vacation images) |
 | AI | OpenAI SDK (gpt-4o-mini) |
 | MCP Server | @modelcontextprotocol/sdk, StreamableHTTPServerTransport |
@@ -40,7 +40,7 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 
 ### 2. Run
 
-No setup needed — Mongo/MinIO credentials and the JWT signing key have safe defaults baked into `docker-compose.yml`, so the stack runs with zero configuration:
+No setup needed — MySQL/MinIO credentials and the JWT signing key have safe defaults baked into `docker-compose.yml`, so the stack runs with zero configuration:
 
 ```bash
 docker compose up --build
@@ -75,7 +75,7 @@ GOOGLE_CLIENT_SECRET=
 
 Then restart the stack: `docker compose up -d --build backend`.
 
-> **Changing MONGO_ROOT_* / MINIO_ROOT_* / VACATIONS_ENCRYPTION_KEY after the first run?** These are only applied the first time each volume is created. Run `docker compose down -v` before `docker compose up --build` so MongoDB/MinIO reinitialise with the new values — otherwise you'll get `Authentication failed` errors.
+> **Changing MYSQL_ROOT_PASSWORD / MYSQL_APP_* / MINIO_ROOT_* / VACATIONS_ENCRYPTION_KEY after the first run?** These are only applied the first time each volume is created. Run `docker compose down -v` before `docker compose up --build` so MySQL/MinIO reinitialise with the new values — otherwise you'll get `Access denied` errors.
 
 ---
 
@@ -113,9 +113,9 @@ docker compose up --build
 
 If it still fails, check for a proxy/VPN/firewall blocking `registry-1.docker.io`.
 
-### Backend/mongosh gets `MongoServerError: Authentication failed` (code 18)
+### Backend gets `Access denied for user` (MySQL)
 
-MongoDB only applies `MONGO_ROOT_USERNAME`/`MONGO_ROOT_PASSWORD` (and MinIO its `MINIO_ROOT_*` vars) the very first time it initializes an **empty** data volume. If you add/change these in `.env` after the volume already exists, the running container keeps the old credentials, so the backend fails to authenticate with the new ones. (You can confirm this by exec-ing into the `vacations-db` container and running `mongosh` with no credentials — if it connects without a password, the volume was initialized without auth.)
+MySQL only applies `MYSQL_ROOT_PASSWORD`/`MYSQL_USER`/`MYSQL_PASSWORD` (and MinIO its `MINIO_ROOT_*` vars) the very first time it initializes an **empty** data volume. If you add/change these in `.env` after the volume already exists, the running container keeps the old credentials, so the backend fails to authenticate with the new ones.
 
 Fix by wiping the volumes and reinitializing with the current credentials:
 
@@ -124,13 +124,13 @@ docker compose down -v
 docker compose up --build
 ```
 
-> ⚠️ `down -v` deletes all data in `mongo-data` and `minio-data` (vacations, users, uploaded images). Only do this on a fresh/dev setup, not on a machine with real data you want to keep.
+> ⚠️ `down -v` deletes all data in `mysql-data` and `minio-data` (vacations, users, uploaded images). Only do this on a fresh/dev setup, not on a machine with real data you want to keep.
 
 ---
 
 ## Local Development (without Docker)
 
-Requires Node.js 20+ and a running MongoDB instance on `localhost:27017`.
+Requires Node.js 20+ and a running MySQL instance on `localhost:3306` (database `vacations`).
 
 ```bash
 # 1. Install dependencies
@@ -151,7 +151,7 @@ cd frontend && npm run dev     # port 3000
 
 ## Running Tests
 
-Integration tests use Jest + Supertest + mongodb-memory-server (no running database needed).
+Integration tests use Jest + Supertest + an ephemeral MySQL container (via `testcontainers`) — requires Docker to be running, no manually-managed test database needed.
 
 ```bash
 cd backend && npm test
@@ -167,10 +167,10 @@ jb-45800-5-project-3/
 │   ├── src/
 │   │   ├── app.ts            # Express app & middleware setup
 │   │   ├── server.ts         # HTTP server entry point
-│   │   ├── models/           # Mongoose models (User, Vacation, Like)
+│   │   ├── models/           # Sequelize models (User, Vacation, Like)
 │   │   ├── controllers/
 │   │   │   ├── auth/         # register, login, Google OAuth
-│   │   │   ├── vacations/    # CRUD + pagination/filter aggregation
+│   │   │   ├── vacations/    # CRUD + pagination/filter (Sequelize + raw SQL for aggregation)
 │   │   │   ├── likes/        # like, unlike
 │   │   │   ├── report/       # JSON report, CSV export
 │   │   │   ├── ai/           # OpenAI recommendation
@@ -180,9 +180,9 @@ jb-45800-5-project-3/
 │   │   └── utils/            # JWT helpers, MinIO image handler
 │   └── config/               # node-config (default.json, custom-environment-variables.json)
 │
-├── database/                 # Custom MongoDB image with embedded TypeScript seeder
-│   ├── Dockerfile            # Multi-stage: compiles TS seeder → mongo:7.0 image
-│   └── src/seed.ts           # Seeder (runs automatically on first container init)
+├── database/                 # MySQL image with schema + seed data baked in
+│   ├── Dockerfile            # FROM mysql:8.0, copies init/*.sql into docker-entrypoint-initdb.d
+│   └── init/                 # 01-schema.sql (tables), 02-seed.sql (vacations + admin/test users)
 │
 ├── mcp/                      # MCP server (port 3002)
 │   └── src/server.ts         # Tools: list_vacations, search_vacations

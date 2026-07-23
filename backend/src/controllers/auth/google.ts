@@ -16,16 +16,16 @@ if (CLIENT_ID && CLIENT_SECRET) {
         { clientID: CLIENT_ID, clientSecret: CLIENT_SECRET, callbackURL: CALLBACK_URL },
         async (_access, _refresh, profile, done) => {
             try {
-                let user = await User.findOne({ googleId: profile.id })
+                let user = await User.findByGoogleId(profile.id)
 
                 if (!user) {
                     const email = profile.emails?.[0]?.value
                     // link to existing account with same email
-                    if (email) user = await User.findOne({ email })
+                    if (email) user = await User.findByEmail(email)
 
                     if (user) {
+                        await User.setGoogleId(user.id, profile.id)
                         user.googleId = profile.id
-                        await user.save()
                     } else {
                         user = await User.create({
                             googleId:  profile.id,
@@ -59,9 +59,9 @@ export function googleCallback(req: Request, res: Response, next: NextFunction) 
             return res.redirect(`${FRONTEND_URL}/login?error=oauth_failed`)
         }
 
-        const token = signToken({ id: user._id.toString(), role: user.role })
+        const token = signToken({ id: String(user.id), role: user.role })
         const userParam = encodeURIComponent(JSON.stringify({
-            _id:       user._id,
+            _id:       String(user.id),
             firstName: user.firstName,
             lastName:  user.lastName,
             email:     user.email,

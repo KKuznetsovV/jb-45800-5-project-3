@@ -1,34 +1,27 @@
 services:
 
-  # MongoDB
+  # MySQL — schema + seed data baked in via database/init/*.sql, which MySQL
+  # runs automatically on first startup against an empty volume (no separate
+  # seeder container needed; naturally idempotent since the scripts only run
+  # once per fresh data directory).
   database:
     container_name: vacations-db
-    image: mongo:7.0
+    build: ./database
     environment:
-      - MONGO_INITDB_DATABASE=vacations
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-mongo_admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-MongoSecure2024}
+      - MYSQL_DATABASE=vacations
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-RootSecure2024}
+      - MYSQL_USER=${MYSQL_APP_USERNAME:-vacations_app}
+      - MYSQL_PASSWORD=${MYSQL_APP_PASSWORD:-VacationsSecure2024}
     expose:
-      - 27017
+      - 3306
     volumes:
-      - mongo-data:/data/db
+      - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 15s
       timeout: 10s
       retries: 5
       start_period: 30s
-
-  # One-shot TypeScript seeder — runs once against `database` over the
-  # network, then exits. Idempotent: skips if vacations already seeded.
-  seeder:
-    container_name: vacations-seeder
-    build: ./database
-    environment:
-      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-mongo_admin}:${MONGO_ROOT_PASSWORD:-MongoSecure2024}@database:27017/vacations?authSource=admin
-    depends_on:
-      database:
-        condition: service_healthy
 
   # MinIO object storage (vacation images)
   minio:
@@ -57,7 +50,7 @@ services:
       - 3001:3001
     environment:
       - NODE_ENV=production
-      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-mongo_admin}:${MONGO_ROOT_PASSWORD:-MongoSecure2024}@database:27017/vacations?authSource=admin
+      - VACATIONS_MYSQL_URI=mysql://${MYSQL_APP_USERNAME:-vacations_app}:${MYSQL_APP_PASSWORD:-VacationsSecure2024}@database:3306/vacations
       - VACATIONS_ENCRYPTION_KEY=${VACATIONS_ENCRYPTION_KEY:-dev-secret-key-change-in-production}
       - VACATIONS_OPENAI_API_KEY=${VACATIONS_OPENAI_API_KEY:-}
       - MCP_URL=http://mcp:3002/mcp
@@ -78,8 +71,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
 
   # MCP server
   mcp:
@@ -87,15 +78,13 @@ services:
     expose:
       - 3002
     environment:
-      - VACATIONS_MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-mongo_admin}:${MONGO_ROOT_PASSWORD:-MongoSecure2024}@database:27017/vacations?authSource=admin
+      - VACATIONS_MYSQL_URI=mysql://${MYSQL_APP_USERNAME:-vacations_app}:${MYSQL_APP_PASSWORD:-VacationsSecure2024}@database:3306/vacations
     build:
       context: ./mcp
       dockerfile: Dockerfile.compose
     depends_on:
       database:
         condition: service_healthy
-      seeder:
-        condition: service_completed_successfully
 
   # Frontend (React, served by nginx)
   frontend:
@@ -107,5 +96,5 @@ services:
       - backend
 
 volumes:
-  mongo-data:
+  mysql-data:
   minio-data:

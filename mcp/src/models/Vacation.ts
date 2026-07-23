@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import { Model, DataTypes, Sequelize, Op } from 'sequelize'
 
-export interface IVacation extends Document {
+export interface IVacation {
+    _id: string
     destination: string
     description: string
     startDate: Date
@@ -9,13 +10,57 @@ export interface IVacation extends Document {
     imageName: string
 }
 
-const vacationSchema = new Schema<IVacation>({
-    destination: { type: String, required: true },
-    description: { type: String, required: true },
-    startDate:   { type: Date,   required: true },
-    endDate:     { type: Date,   required: true },
-    price:       { type: Number, required: true },
-    imageName:   { type: String, required: true }
-})
+export class VacationModel extends Model {
+    declare id: number
+    declare destination: string
+    declare description: string
+    declare startDate: string
+    declare endDate: string
+    declare price: number
+    declare imageName: string
+}
 
-export default mongoose.model<IVacation>('Vacation', vacationSchema)
+export function initVacationModel(sequelize: Sequelize): void {
+    VacationModel.init({
+        id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+        destination: { type: DataTypes.STRING(255), allowNull: false },
+        description: { type: DataTypes.TEXT, allowNull: false },
+        startDate: { type: DataTypes.DATEONLY, allowNull: false },
+        endDate: { type: DataTypes.DATEONLY, allowNull: false },
+        price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+        imageName: { type: DataTypes.STRING(255), allowNull: false }
+    }, {
+        sequelize,
+        modelName: 'Vacation',
+        tableName: 'vacations'
+    })
+}
+
+function toJSON(vacation: VacationModel): IVacation {
+    const plain = vacation.get({ plain: true }) as any
+    return {
+        _id: String(plain.id),
+        destination: plain.destination,
+        description: plain.description,
+        startDate: new Date(plain.startDate),
+        endDate: new Date(plain.endDate),
+        price: parseFloat(plain.price),
+        imageName: plain.imageName
+    }
+}
+
+const Vacation = {
+    async findAll(): Promise<IVacation[]> {
+        const vacations = await VacationModel.findAll()
+        return vacations.map(toJSON)
+    },
+
+    async findByDestination(destination: string): Promise<IVacation[]> {
+        const vacations = await VacationModel.findAll({
+            where: { destination: { [Op.like]: `%${destination}%` } }
+        })
+        return vacations.map(toJSON)
+    }
+}
+
+export default Vacation

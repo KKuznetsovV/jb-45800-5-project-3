@@ -1,14 +1,14 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { UploadedFile } from 'express-fileupload'
-import { Types } from 'mongoose'
-import Vacation from '../../models/Vacation'
+import Vacation, { toJSON } from '../../models/Vacation'
 import { saveImage, deleteImage } from '../../utils/image-handler'
+import { isValidId } from '../../utils/id'
 
 export default async function update(request: Request, response: Response, next: NextFunction) {
     try {
         const { id } = request.params
 
-        if (!Types.ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return next({ status: 400, message: 'Invalid vacation id' })
         }
 
@@ -24,9 +24,9 @@ export default async function update(request: Request, response: Response, next:
             updateData.imageName = await saveImage(newImage)
         }
 
-        const vacation = await Vacation.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+        const vacation = await Vacation.update(existing.id, updateData)
 
-        response.json(vacation)
+        response.json(toJSON(vacation!))
     } catch (err) {
         next(err)
     }

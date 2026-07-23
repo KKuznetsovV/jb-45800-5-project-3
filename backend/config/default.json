@@ -9,7 +9,7 @@
     }
   },
   "db": {
-    "uri": "mongodb://localhost:27017/vacations"
+    "uri": "mysql://root:root@localhost:3306/vacations"
   },
   "mcp": {
     "url": "http://localhost:3002/mcp"
