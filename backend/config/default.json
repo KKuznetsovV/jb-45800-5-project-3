@@ -17,6 +17,8 @@
   "minio": {
     "endPoint": "localhost",
     "port": 9000,
+    "useSSL": false,
+    "region": "",
     "accessKey": "minioadmin",
     "secretKey": "minioadmin",
     "bucket": "vacations"

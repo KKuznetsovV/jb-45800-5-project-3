@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux'
 import VacationModel from '../../models/VacationModel'
 import { RootState } from '../../redux/store'
+import { getImageUrl } from '../../services/image-url'
 import './VacationCard.css'
 
 interface Props {
@@ -21,7 +22,7 @@ function VacationCard({ vacation, onLikeToggle, onEdit, onDelete }: Props) {
       <div className={`vacation-card-image-wrap${vacation.imageName ? '' : ' no-image'}`}>
         {vacation.imageName && (
           <img
-            src={`/uploads/${vacation.imageName}`}
+            src={getImageUrl(vacation.imageName)}
             alt={vacation.destination}
             onError={(e) => {
               const img = e.target as HTMLImageElement

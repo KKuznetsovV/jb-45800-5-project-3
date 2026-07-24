@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ARG VITE_IMAGES_BASE_URL
+ENV VITE_IMAGES_BASE_URL=$VITE_IMAGES_BASE_URL
 RUN npm run build
 
 FROM nginx:alpine

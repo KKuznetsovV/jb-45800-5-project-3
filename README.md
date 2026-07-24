@@ -10,7 +10,7 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 - **Like / Unlike** vacations with live counter updates
 - **Auth** — register, login with JWT, role-based access (user / admin)
 - **Google OAuth** — sign in or register via Google account
-- **Admin panel** — add, edit and delete vacations with image upload (stored in MinIO)
+- **Admin panel** — add, edit and delete vacations with image upload (stored in a remote S3-compatible bucket, e.g. Cloudflare R2)
 - **AI recommendation** — enter a destination, get a GPT-4o-mini travel tip
 - **MCP chat** — ask natural-language questions answered from live vacation data
 - **Likes report** — admin bar chart (Recharts) with CSV export
@@ -25,7 +25,7 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 | Frontend | React 18, Vite, TypeScript, Redux Toolkit, React Router v6, Recharts |
 | Backend | Node.js, Express, TypeScript, Sequelize (mysql2 driver), Joi, JWT, bcryptjs, Passport.js |
 | Database | MySQL 8.0 |
-| Object Storage | MinIO (S3-compatible, vacation images) |
+| Object Storage | S3-compatible remote bucket (Cloudflare R2 / AWS S3 / Backblaze B2 / ...) via the MinIO JS client |
 | AI | OpenAI SDK (gpt-4o-mini) |
 | MCP Server | @modelcontextprotocol/sdk, StreamableHTTPServerTransport |
 | Infrastructure | Docker, docker compose, nginx |
@@ -38,9 +38,17 @@ A full-stack vacation browsing and likes application built with React, Node.js/E
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-### 2. Run
+### 2. Configure image storage (required)
 
-No setup needed — MySQL/MinIO credentials and the JWT signing key have safe defaults baked into `docker-compose.yml`, so the stack runs with zero configuration:
+Vacation images are stored in a real remote S3-compatible bucket (e.g. Cloudflare R2) — there is no local MinIO container and no image files in this repo. Copy `.env.example` to `.env` and fill in the `MINIO_*` variables with your bucket's credentials (see `.env.example` for exact Cloudflare R2 setup steps):
+
+```bash
+cp .env.example .env
+```
+
+### 3. Run
+
+MySQL credentials and the JWT signing key already have safe defaults baked into `docker-compose.yml`:
 
 ```bash
 docker compose up --build
@@ -50,19 +58,14 @@ docker compose up --build
 |---|---|
 | Frontend | http://localhost |
 | Backend API | http://localhost:3001/api |
-| MinIO Console | http://localhost:9001 (`minio_admin` / `MinioSecure2024` by default) |
 
 > **Note:** MCP server runs on an internal Docker network only and is not exposed to the host.
 
 The database container seeds vacations, an admin user, and a test user automatically on first start.
 
-### 3. Environment variables (optional)
+### 4. Optional features
 
-Two features are disabled until you provide your own secrets. Copy `.env.example` to `.env` and fill in only what you need — everything else already has a working default:
-
-```bash
-cp .env.example .env
-```
+Two more features are disabled until you provide your own secrets, in the same `.env`:
 
 ```env
 # Enables the AI travel recommendation feature (leave unset to disable it)
@@ -75,7 +78,7 @@ GOOGLE_CLIENT_SECRET=
 
 Then restart the stack: `docker compose up -d --build backend`.
 
-> **Changing MYSQL_ROOT_PASSWORD / MYSQL_APP_* / MINIO_ROOT_* / VACATIONS_ENCRYPTION_KEY after the first run?** These are only applied the first time each volume is created. Run `docker compose down -v` before `docker compose up --build` so MySQL/MinIO reinitialise with the new values — otherwise you'll get `Access denied` errors.
+> **Changing MYSQL_ROOT_PASSWORD / MYSQL_APP_* / VACATIONS_ENCRYPTION_KEY after the first run?** These are only applied the first time the MySQL volume is created. Run `docker compose down -v` before `docker compose up --build` so MySQL reinitialises with the new values — otherwise you'll get `Access denied` errors.
 
 ---
 
@@ -115,16 +118,20 @@ If it still fails, check for a proxy/VPN/firewall blocking `registry-1.docker.io
 
 ### Backend gets `Access denied for user` (MySQL)
 
-MySQL only applies `MYSQL_ROOT_PASSWORD`/`MYSQL_USER`/`MYSQL_PASSWORD` (and MinIO its `MINIO_ROOT_*` vars) the very first time it initializes an **empty** data volume. If you add/change these in `.env` after the volume already exists, the running container keeps the old credentials, so the backend fails to authenticate with the new ones.
+MySQL only applies `MYSQL_ROOT_PASSWORD`/`MYSQL_USER`/`MYSQL_PASSWORD` the very first time it initializes an **empty** data volume. If you add/change these in `.env` after the volume already exists, the running container keeps the old credentials, so the backend fails to authenticate with the new ones.
 
-Fix by wiping the volumes and reinitializing with the current credentials:
+Fix by wiping the volume and reinitializing with the current credentials:
 
 ```bash
 docker compose down -v
 docker compose up --build
 ```
 
-> ⚠️ `down -v` deletes all data in `mysql-data` and `minio-data` (vacations, users, uploaded images). Only do this on a fresh/dev setup, not on a machine with real data you want to keep.
+> ⚠️ `down -v` deletes all data in `mysql-data` (vacations, users). Only do this on a fresh/dev setup, not on a machine with real data you want to keep. Vacation images are unaffected since they live in your remote bucket, not in a local volume.
+
+### Images don't load / backend fails to start with a MinIO/S3 connection error
+
+Check that `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, and `MINIO_BUCKET` are set correctly in `.env` (see `.env.example`) and that the API token has Object Read & Write permission on that bucket.
 
 ---
 
@@ -144,8 +151,7 @@ cd mcp      && npm run dev     # port 3002
 cd frontend && npm run dev     # port 3000
 ```
 
-> **Note:** Image uploads require MinIO running locally. Start it with:
-> `docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"`
+> **Note:** Image uploads/views require the `MINIO_*` env vars (pointing at your remote S3-compatible bucket) to be set — see `.env.example`. There is no local MinIO to run.
 
 ---
 
@@ -174,10 +180,10 @@ jb-45800-5-project-3/
 │   │   │   ├── likes/        # like, unlike
 │   │   │   ├── report/       # JSON report, CSV export
 │   │   │   ├── ai/           # OpenAI recommendation
-│   │   │   ├── images/       # MinIO image proxy
+│   │   │   ├── images/       # S3-compatible bucket image proxy
 │   │   │   └── mcp/          # MCP client proxy
 │   │   ├── middlewares/      # authEnforce, bodyValidation, error handling
-│   │   └── utils/            # JWT helpers, MinIO image handler
+│   │   └── utils/            # JWT helpers, S3-compatible image handler (MinIO JS client)
 │   └── config/               # node-config (default.json, custom-environment-variables.json)
 │
 ├── database/                 # MySQL image with schema + seed data baked in
@@ -223,7 +229,7 @@ All routes except `/api/auth/*` require `Authorization: Bearer <token>`.
 | POST | `/api/vacations` | Admin | Add vacation (multipart) |
 | PUT | `/api/vacations/:id` | Admin | Update vacation (multipart) |
 | DELETE | `/api/vacations/:id` | Admin | Delete vacation |
-| GET | `/uploads/:imageName` | User | Serve vacation image from MinIO |
+| GET | `/uploads/:imageName` | User | Proxy a vacation image from the remote bucket (unused when `VITE_IMAGES_BASE_URL` is set and the bucket is public) |
 | POST | `/api/likes/:vacationId` | User | Like a vacation |
 | DELETE | `/api/likes/:vacationId` | User | Unlike a vacation |
 | GET | `/api/report` | Admin | Likes report JSON |

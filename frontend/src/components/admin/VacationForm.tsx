@@ -1,5 +1,6 @@
 import { ChangeEvent, FormEvent, useRef, useState } from 'react'
 import VacationModel from '../../models/VacationModel'
+import { getImageUrl } from '../../services/image-url'
 import './VacationForm.css'
 
 interface Props {
@@ -33,7 +34,7 @@ function VacationForm({ title, initialVacation, onSubmit }: Props) {
 
   const [image, setImage]     = useState<File | null>(null)
   const [preview, setPreview] = useState<string>(
-    initialVacation ? `/uploads/${initialVacation.imageName}` : ''
+    initialVacation ? getImageUrl(initialVacation.imageName) : ''
   )
   const [error, setError]         = useState('')
   const [submitting, setSubmitting] = useState(false)

@@ -6,12 +6,21 @@ import type { UploadedFile } from 'express-fileupload'
 
 const BUCKET = process.env.MINIO_BUCKET || config.get<string>('minio.bucket')
 
+// useSSL/region are configurable so this client can point at a real remote
+// S3-compatible bucket (Cloudflare R2, AWS S3, Backblaze B2, ...) — set
+// MINIO_ENDPOINT/PORT/USE_SSL/ACCESS_KEY/SECRET_KEY/BUCKET/REGION in .env.
+const useSSL = process.env.MINIO_USE_SSL !== undefined
+    ? process.env.MINIO_USE_SSL === 'true'
+    : config.get<boolean>('minio.useSSL')
+const region = process.env.MINIO_REGION || config.get<string>('minio.region') || undefined
+
 export const minioClient = new Client({
     endPoint:  process.env.MINIO_ENDPOINT  || config.get<string>('minio.endPoint'),
     port:      Number(process.env.MINIO_PORT) || config.get<number>('minio.port'),
-    useSSL:    false,
+    useSSL,
     accessKey: process.env.MINIO_ACCESS_KEY || config.get<string>('minio.accessKey'),
     secretKey: process.env.MINIO_SECRET_KEY || config.get<string>('minio.secretKey'),
+    ...(region ? { region } : {}),
 })
 
 export async function initBucket(): Promise<void> {
